@@ -1,5 +1,7 @@
 # Exact expected subgraph counts in the random *k*-out graph
 
+**Repository:** https://github.com/rajveersinh-is-dev/kout-local-structure
+
 Author of record: **Rajveersinh Vishal Pardeshi** (Independent Researcher).
 
 This repository accompanies the manuscript
