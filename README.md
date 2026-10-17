@@ -78,7 +78,7 @@ LaTeX toolchain works).
 | `paper/` | manuscript (`main.tex`, `references.bib`) and compiled `main.pdf` |
 | `src/` | `kout.py` (formulae, closed forms, exact-Fraction paths, enumeration, MC), `experiments.py` (regenerates every CSV), `verify_symbolic.py` (36 checks) |
 | `tests/` | pytest suite (43 tests) |
-| `results/` | 8 CSV files + `summary.md`; **every number in the paper's tables comes from these files** |
+| `results/` | 7 CSV files + `summary.md`; **every number in the paper's tables comes from these files** |
 | `research/` | research-process documents: literature review, evidence ledger (claim → evidence map, residual risks R1–R5), novelty assessment, two hostile-review passes, limitations, journal-selection record |
 
 ## Data provenance and licence
