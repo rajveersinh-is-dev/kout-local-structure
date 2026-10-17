@@ -1,0 +1,1002 @@
+% main.tex — The local structure of the random k-out graph
+% Compile: tectonic main.tex  (all packages freely fetched by Tectonic)
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.6cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{microtype}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem*{remark}{Remark}
+\theoremstyle{definition}
+\newtheorem*{definition*}{Definition}
+
+\title{Exact expected subgraph counts in the random $k$-out graph:\\
+closed forms, a matched-density Erd\H{o}s--R\'enyi contrast,\\ and an orientation invariant}
+\author{Rajveersinh Vishal Pardeshi\thanks{Independent researcher. No institutional
+affiliation. Code, data, and the verification documents described in
+Section~\ref{sec:repro} accompany this work in a public repository; see
+Section~\ref{sec:repro} for the reproducibility statement.}}
+\date{October 18, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In the \emph{random $k$-out graph} $G(n,k\text{-out})$ each of the $n$ vertices
+independently selects a $k$-subset of the other $n-1$ vertices, and two vertices are
+adjacent if either selected the other (symmetrized union). The model is a standard
+$O(nk)$-edge alternative to the Erd\H{o}s--R\'enyi graph $G(n,p)$ and has been studied
+chiefly through global observables (connectivity, perfect matchings, Hamilton cycles).
+We develop its \emph{local structure}. Our first result is an exact closed formula,
+valid for every fixed finite simple graph $H$ and all finite $(n,k)$, for the expected
+number of copies of $H$ (Theorem~\ref{thm:general}); it relies on a per-chooser
+avoidance probability that is exact hypergeometric and on chooser independence, and it
+quantifies the \emph{within-chooser negative correlation}
+$\Pr(v\in S_u,\, w\in S_u)=\frac{k(k-1)}{(n-1)(n-2)}$ that invalidates naive
+$G(n,p)$-style shortcuts. We then compute: (i) the exact triangle closed form
+$P(\triangle)=1-3A^{2}+3A^{2}B-B^{3}$ and its series, the limiting mean
+$\mathbb E T \to (4k^{3}-3k^{2})/3$, the limiting variance
+$\operatorname{Var}(T)\to(4k^{3}-3k^{2})/3$ (with exact $1/n$ terms), and the exact
+$k=1$ specials $P(\triangle)=2/(n-1)^3$ (Theorems~\ref{thm:tri},
+\ref{thm:variance}); (ii) a matched-density comparison with $G(n,p)$: the expected
+triangle counts obey a ratio tending to $1-\frac{3}{4k}$, with the four-cycle ratio
+tending to $1-\frac{1}{k}+\frac{1}{8k^{2}}$ (Proposition~\ref{prop:er}); (iii) an
+exact cancellation theorem for stars $K_{1,m}$: the first non-zero term of the
+fixed-vertices star probability is exactly of order $n^{-m}$, and
+$\mathbb E[\,\#\text{ unlabelled }K_{1,m}\,] = \frac{c_m(k)}{m!}\,n\,(1+o(1))$ with
+explicit $c_m(k)$ (Theorem~\ref{thm:stars}); and (iv) a general asymptotic
+description: for any fixed $H$, $\mathbb E[\,\#\text{ labelled copies of
+}H\,]\sim\Omega_k(H)\, n^{v-e}$, where
+\[
+\Omega_k(H)\;=\;\sum_{\sigma}\ \prod_{x\in V(H)}(k)_{t_x(\sigma)}
+\]
+is an explicit \emph{orientation invariant} summed over the assignments $\sigma$ of
+each edge of $H$ to exactly one of its endpoints, $(k)_t$ being a falling factorial
+(Theorem~\ref{thm:omega}). $\Omega_k(H)=0$ if and only if no assignment keeps every
+vertex's owned degree at most $k$. All approximate statements above carry
+machine-exact series constants. All closed forms are verified at exact precision:
+symbolically (sympy), by exhaustive enumeration over \emph{all} choice profiles for
+small $n$ (difference zero), and by Monte Carlo at large $n$ (all $|z|\le 1.43$). The
+Poisson-type limit of the triangle count is stated as a conjecture supported by two
+exact moments; we do not claim it as a theorem.
+\end{abstract}
+
+\noindent\textbf{MSC 2020.} Primary 05C80, 05C07; secondary 60C05, 05C35.\\
+\textbf{Keywords.} random $k$-out graph, subgraph counts, triangles, clustering,
+stars, orientation invariant, exact formulae.
+
+\section{Introduction}
+\subsection{The model and motivation}
+
+The \emph{random $k$-out graph} $G(n,k\text{-out})$ (in the symmetrized form used
+throughout the literature, e.g.\
+\cite[Ch.~22]{friezeKaronski2015}, \cite{soodYagan2020}) is constructed as follows.
+Each of the $n$ vertices $v$ independently and uniformly selects a $k$-subset
+$S_v\subseteq [n]\setminus\{v\}$; vertices $u$ and $v$ are adjacent if either
+$u\in S_v$ or $v\in S_u$. The resulting simple graph has exactly between $nk/2$ and
+$nk$ edges ($\mathbb E[\# \text{edges}] = nk - \tfrac{nk^2}{2(n-1)}$ exactly,
+Proposition~\ref{prop:edges}) — a degree-bounded, connected-with-high-probability
+($k\ge 2$) sparse model.
+
+$G(n,k\text{-out})$ is a workhorse model in situations where each node has a hard
+budget of $\approx k$ directed links: random pairwise key predistribution in sensor
+networks \cite{eschenauerGligor2002,yaganMakowski2009,soodYagan2020}, payment channel
+networks, and related designs; see \cite{elumarSoodYagan2023} and the references in
+\cite{soodYagan2020}. Its \emph{global} behaviour is well understood: connectivity is
+achieved almost surely for every $k\ge2$
+\cite{fennerFrieze1982,friezeKaronski2015}, with sharp finite-$n$ bounds
+\cite{soodYagan2020}; perfect matchings and Hamilton cycles occur
+with high probability \cite[Ch.~22]{friezeKaronski2015}; and $k$-out
+subgraphs of large hosts are $k$-connected w.h.p.\
+\cite{friezeJohansson2014}.
+
+\subsection{The gap: local structure}
+By contrast, the \emph{local} structure — the expected number of copies of a fixed
+small graph $H$ (triangle, $4$-cycle, star, path, $\dots$) at finite $(n,k)$ — has
+not, to our knowledge, been developed. The chapter of \cite{friezeKaronski2015}
+devoted to $k$-out graphs (Ch.~22) contains connectivity, perfect matchings,
+Hamilton cycles, and nearest-neighbour graphs, and no counts of fixed subgraphs
+(checked against the authors' full text; Section~\ref{sec:related}). The recent
+triangle analyses for other correlated models — random key graphs
+\cite{yaganMakowski2009,yaganMakowski2017}, clustered random graphs
+\cite{newman2009}, and the clustering-index estimates of
+\cite{islakYesiloglu2024} (which treat Erd\H os--R\'enyi expressions and simulate
+regular/Barab\'asi--Albert/Watts--Strogatz models, without the $k$-out model) — do
+not cover this model either.
+
+The question is non-trivial and the answer is not a transposition of the
+$G(n,p)$ computation, because of a genuine structural feature: the maker choices
+\emph{within} one chooser are negatively correlated,
+\begin{equation}\label{eq:negcorr}
+\Pr\bigl(v\in S_u \wedge w\in S_u\bigr)=\frac{k(k-1)}{(n-1)(n-2)}
+\;<\;\Bigl(\frac{k}{n-1}\Bigr)^{2},
+\end{equation}
+so the per-vertex choices do not behave as independent coin flips, and a naive
+$G(n,p)$-style ``independence'' computation can overshoot the truth by factors
+of several (Table~\ref{tab:naive}: at $k=1$, $n=200$ the naive estimate is
+$3.97\times$ the exact value).
+
+\subsection{Contributions and overview}
+We establish, for every fixed finite simple graph $H$ ($v$ vertices, $e$ edges) and
+all finite $(n,k)$ with $1\le k\le n-1$:
+
+\begin{enumerate}
+\item \textbf{Exact general formula} (Theorem~\ref{thm:general}): an alternating
+per-edge inclusion--exclusion whose summands are exact products of per-chooser
+avoidance probabilities. It computes
+$\mathbb E[\#\{\text{labelled copies of }H\}]$ exactly at any $(n, k)$.
+\item \textbf{Triangles} (Theorems~\ref{thm:tri} and \ref{thm:variance}):
+the exact closed form
+$P(\triangle) = 1-3A^2+3A^2B-B^3$ (with $A=\frac{\binom{n-2}{k}}{\binom{n-1}{k}}$,
+$B=\frac{\binom{n-3}{k}}{\binom{n-1}{k}}$), an alternate identity exposing the
+negative correction to the naive value, exact series coefficients
+$(4k^3-3k^2)/3,\; -\frac{k^2(k-1)(4k-3)}{2},
+\frac{k^2(6k^3-39k^2+46k-15)}{6}$, exact $k=1$ specials
+($P(\triangle)=2/(n-1)^3$), and the exact second moment of the triangle count with
+$\operatorname{Var}(T)\to(4k^3-3k^2)/3$ and $1/n$-term
+$-\frac{k^2(16k^2-21k+7)}{2}$.
+\item \textbf{Matched-density Erd\H{o}s--R\'enyi contrast}
+(Proposition~\ref{prop:er}): with the edge density $q=2p-p^{2}$,
+$p=\tfrac{k}{n-1}$, matched between the two models, the ratio of expected triangle
+counts tends to $1-\tfrac{3}{4k}$ (e.g.\ $\tfrac14$ at $k=1$,
+$\tfrac78$ at $k=4$), with explicit $1/n$ corrections; the $4$-cycle ratio tends to
+$1-\tfrac1k+\tfrac{1}{8k^2}$.
+\item \textbf{Stars} (Theorem~\ref{thm:stars}): an exact closed form for stars
+$K_{1,m}$ and the exact orders: the first non-zero term of the star probability at
+fixed vertices is exactly of orders $n^{-m}$, so
+$\mathbb E[\#\text{unl. }K_{1,m}] = \frac{c_m(k)}{m!}\,n(1+o(1))$ with explicit
+polynomials $c_m(k)$ up to $m=6$ (Appendix, Table~\ref{tab:cm}) and, in general,
+$c_m(k)=\sum_{j}\binom{m}{j}(k)_{j}\,k^{m-j}$.
+\item \textbf{General asymptotics via an orientation invariant}
+(Theorem~\ref{thm:omega}): for any fixed $H$,
+\[
+\mathbb E[\#\{\text{labelled copies of }H\}]\;/\; n^{v-e}\;\longrightarrow\;
+\Omega_k(H)\;=\;\sum_{\sigma}\prod_{x}(k)_{t_x(\sigma)},
+\]
+the sum over the $2^{e}$ assignments $\sigma$ of each edge to exactly one of its
+endpoints, with $t_x(\sigma)$ the number of edges assigned to $x$.
+$\Omega_k(H)=0$ iff no assignment gives every vertex owned degree at most $k$; the
+proof is a two-sided Bonferroni argument and is complete.
+\item \textbf{Verification stack} (Section~\ref{sec:repro}): all closed forms
+cross-checked symbolically over the rationals, by exhaustive enumeration over
+\emph{all} choice profiles at small $n$ (agreement to machine zero, e.g.\
+$\operatorname{Var}(T)=\tfrac{15985}{5832}$ at $(n,k)=(5,2)$), and by Monte Carlo at
+large $n$ (Table~\ref{tab:mc}: worst $|z|=1.43$ on means, $1.41$ on variances).
+\end{enumerate}
+
+\emph{Honesty statement on novelty.} We are \emph{not} aware of any published
+closed-form expression for the expected number of copies of a fixed graph
+$H$ (with $e\ge2$) in the symmetrized random $k$-out graph, at finite $(n,k)$ or in
+asymptotic form. This negative statement is the result of the targeted search
+described in Section~\ref{sec:related}; we cannot exclude the existence of
+unindexed or overlooked prior work, and we phrase our contribution accordingly.
+
+\subsection{Notation}
+Throughout, $n\ge 2$, $1\le k\le n-1$, and $(a)_m = a(a-1)\cdots(a-m+1)$ is the
+falling factorial (with $(a)_0=1$), $\binom{r}{s}=0$ if $r<s$ or $s<0$. All labels
+are of the template $H$'s vertices; a \emph{labelled copy} of $H$ in $G$ is an
+injective map $\varphi:V(H)\to[n]$ such that $\varphi(u)\varphi(v)\in E(G)$ for every
+$uv\in E(H)$; the number of \emph{unlabelled} copies sitting on a given vertex set is
+the labelled count divided by $|\mathrm{Aut}(H)|$. The expectation is over the
+random chooser sets $(S_v)_{v\in[n]}$, independent across vertices.
+
+\section{Preliminaries}\label{sec:model}
+
+\begin{definition*}[Model]
+$G(n,k\text{-out})$: every $v\in[n]$ draws $S_v$ uniformly from the
+$\binom{n-1}{k}$ $k$-subsets of $[n]\setminus\{v\}$; the chooser sets
+$(S_v)$ are independent. An edge $uv$ exists iff $u\in S_v$ or $v\in S_u$.
+\end{definition*}
+
+For a fixed unordered pair $\{u,v\}$, $\Pr(uv\in E) = q := 2p-p^{2}$ with
+$p=\tfrac{k}{n-1}$: either $v$ chose $u$ (probability $p$) or else $v$ did not choose
+$u$ (prob. $1-p$) and $u$ chose $v$ (prob. $p$, independent across choosers).
+Note $q=1-A^{2}$ with $A:=\binom{n-2}{k}/\binom{n-1}{k}=(1-\tfrac{k}{n-1})$.
+
+\begin{lemma}[Within-chooser negative correlation]\label{lem:negcorr}
+For fixed $u$ and distinct $v,w\ne u$,
+\[
+\Pr(v\in S_u \wedge w \in S_u) = \frac{\binom{n-3}{k-2}}{\binom{n-1}{k}}
+=\frac{k(k-1)}{(n-1)(n-2)} < \Bigl(\frac{k}{n-1}\Bigr)^{2} = \Pr(v\in S_u)\Pr(w\in S_u).
+\]
+\end{lemma}
+\begin{proof}
+Hypergeometric: the count of $k$-subsets of $[n]\setminus\{u\}$ containing both
+$v,w$ is $\binom{n-3}{k-2}$. The ratio expands to $\frac{k(k-1)}{(n-1)(n-2)}$, and
+$\frac{k(k-1)}{(n-1)(n-2)}<\frac{k^2}{(n-1)^2}$ for $k\ge1$. \qed
+\end{proof}
+
+Chooser independence (across different vertices $u$) is exact; it is only the
+\emph{within}-chooser dependencies (Lemma~\ref{lem:negcorr}) that break the
+$G(n,p)$ analogy. Our exact formulae keep track of them through exact
+avoidance probabilities.
+
+\begin{proposition}[Edges]\label{prop:edges}
+\[
+\mathbb E[\,\#\text{edges}\,] = \binom{n}{2}\,q = nk-\frac{nk^2}{2(n-1)}\quad\text{exactly.}
+\]
+\end{proposition}
+
+\section{The general subgraph-count formula}\label{sec:general}
+
+Fix a template $H$ with vertex set \(\{1,\dots,v\}\) and edge list
+$E(H)$. For a subset $F\subseteq E(H)$ let $d_x(F)$ be the degree of $x$ in the
+spanning subgraph $(V(H),F)$.
+
+\begin{theorem}[Exact expected labelled copy count]\label{thm:general}
+For fixed $(n,k)$ and any fixed injective map $\varphi:\, V(H)\to [n]$,
+\[
+\Pr\bigl(\varphi \text{ is an embedding}\bigr)
+\;=\;\sum_{F\subseteq E(H)}(-1)^{|F|}\ \prod_{x\in V(H)}
+\frac{\binom{\,n-1-d_x(F)\,}{k}}{\binom{n-1}{k}},
+\]
+hence, exactly,
+\[
+\mathbb E\bigl[\,\#\{\text{labelled copies of }H\}\,\bigr]
+= (n)_{v}\ \sum_{F\subseteq E(H)}(-1)^{|F|}\ \prod_{x}
+\frac{\binom{\,n-1-d_x(F)\,}{k}}{\binom{n-1}{k}},
+\]
+where the convention $\binom{r}{k}=0$ for $r<k$ applies. For fixed $k$ and $H$, the
+summands are rational numbers (exact), and the formula involves at most
+$2^{e}$ terms.
+\end{theorem}
+
+\begin{proof}
+By symmetry over injective maps, the probability for any fixed $\varphi$ equals the
+probability for the identity embedding; write $x$ for the vertex of label
+$\varphi(x)$. For $uv \in E(H)$ let $X_{uv}$ be the event that $uv$ is an edge of
+$G(n,k\text{-out})$. Then
+$\Pr(\forall uv\in E(H):\, X_{uv}) =\ \sum_{F \subseteq E(H)}(-1)^{|F|}\,
+\Pr\bigl(\bigcap_{uv\in F}\overline{X_{uv}}\bigr)$
+by inclusion--exclusion.
+
+Now $\bigcap_{uv \in F}\overline{X_{uv}}$ holds iff every chooser $x$ avoids each of
+its $d_x(F)$ template-neighbours. The chooser sets are independent across $x$, and
+the probability that $x$'s uniformly random $k$-subset of $[n]\setminus\{x\}$
+avoids a fixed set of $d_x(F)$ forbidden targets is exactly
+$\binom{n-1-d_x(F)}{k}/\binom{n-1}{k}$ (hypergeometric, exact); multiplying this
+over the (independent) choosers $x\in V(H)$ gives
+$\prod_x \binom{\,n-1-d_x(F)\,}{k}/\binom{n-1}{k}^{\,v}$.
+The expectation follows because for a uniform injective $\varphi$, the
+$\varphi$-images of the $v$ template vertices are the entries of a uniformly random
+$v$-tuple of distinct vertices, giving the factor $(n)_v$. \qed
+\end{proof}
+
+\begin{remark}
+The formula has the shape of a $G(n,p)$-type inclusion--exclusion \emph{except}
+that the ``per-edge exponentially-closed'' factors of $G(n,p)$
+(factors $(1-p^2)^{|\cdot|}$) are replaced by \emph{per-chooser} products of exact
+avoidance probabilities; the difference is precisely what survives of the negative
+correlation of Lemma~\ref{lem:negcorr}. For later use we also record that all
+predictions of Theorem~\ref{thm:general} were verified independent of it, by
+exhaustive enumeration over all choice profiles
+(Section~\ref{sec:repro}: every comparison has absolute difference $\le 2.2\cdot
+10^{-15}$, mostly exactly $0$).
+\end{remark}
+
+\section{Triangles: exact formula, asymptotics, and the naive gap}\label{sec:tri}
+
+Let $T$ be the number of (unlabelled) triangles: $T=\sum_{\{a,b,c\}}\mathbf 1\{abc
+\text{ triangle}\}$.
+
+\begin{theorem}[Exact triangle probability]\label{thm:tri}
+Let
+\[
+A=\frac{\binom{n-2}{k}}{\binom{n-1}{k}} = 1-\frac{k}{n-1},\qquad
+B=\frac{\binom{n-3}{k}}{\binom{n-1}{k}}
+=\Bigl(1-\frac{k}{n-1}\Bigr)\Bigl(1-\frac{k}{n-2}\Bigr).
+\]
+Write $C:=\tfrac{n-2-k}{n-2}$, so that $B=AC$. Then exactly
+\begin{equation}\label{eq:triflat}
+P(\triangle):=\Pr(\text{fixed triple }\{a,b,c\}\text{ spans a triangle})
+=1-3A^{2}+3A^{2}B-B^{3},
+\end{equation}
+and, equivalently,
+\begin{equation}\label{eq:triident}
+P(\triangle)\;=\;\underbrace{(1-A^{2})^{3}}_{\text{naive }G(n,p)\text{ value}}\;+\;
+A^{3}\,(C-A)\,\bigl(3-A^{2}-AC-C^{2}\bigr),
+\end{equation}
+where the second term is $\le 0$ (since $C<A$), a \emph{negative correction} to the
+naive value.
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{thm:general} specialized to the triangle (edges $ab,bc,ca$), a subset
+$F\subseteq\{ab,bc,ca\}$ of size $0,1,2,3$ yields $(d_a,d_b,d_c)$ equal to
+$(0,0,0)$; $(1,1,0)$-permutations; $(2,1,1)$-permutations; and $(2,2,2)$,
+respectively. There are $1$, $3$, $3$, $1$ such subsets, hence
+$P(\triangle)=1-3A^2+3A^2B-B^3$, since the middle product is
+$\frac{\binom{n-3}{k}}{\binom{n-1}{k}}\cdot
+\frac{\binom{n-2}{k}}{\binom{n-1}{k}}\cdot\frac{\binom{n-2}{k}}{\binom{n-1}{k}} = B\,A^2$.
+The identity \eqref{eq:triident} is an algebraic rearrangement using $B=AC$
+and $q=1-A^2$; both the relation $B\equiv AC$ and the equivalence
+\eqref{eq:triident}$\equiv$\eqref{eq:triflat} are machine-checked symbolically.
+The sign of the correction: $C - A = \tfrac{n-2-k}{n-2} - \tfrac{n-1-k}{n-1}
+= -\tfrac{k}{(n-1)(n-2)}< 0$, while $3-A^2-AC-C^2 >0$ for the relevant range
+(it is $3 - (A^2+AC+C^2)$ with $A,C \in (0,1)$, so $A^2+AC+C^2 < 3$).
+\qed
+\end{proof}
+
+\begin{theorem}[Asymptotics of the mean]\label{thm:triasy}
+As $n\to\infty$ with $k$ fixed, with $T$ the triangle count,
+\[
+\mathbb E T \;=\;e_0+\frac{e_1}{n}+\frac{e_2}{n^{2}}
++O\!\left(\frac{1}{n^{3}}\right),
+\]
+where
+\[
+e_0=\frac{4k^{3}-3k^{2}}{3},\qquad
+e_1=-\frac{k^{2}(k-1)(4k-3)}{2},\qquad
+e_2=\frac{k^{2}(6k^{3}-39k^{2}+46k-15)}{6},
+\]
+and the next coefficient is
+$\ e_3=-\frac{k^{2}(k^{4}-27k^{3}+99k^{2}-96k+27)}{6}$
+(by which the truncated series at $1/n^{2}$ is controlled).
+In particular \ $\lim \mathbb E T = (4k^{3}-3k^{2})/3$, i.e.\ $\Theta(1)$ for fixed
+$k$: the mean triangle count does not grow with $n$ at all.
+\end{theorem}
+
+The coefficients were derived by exact series expansion of
+$\binom{n}{3}P(\triangle)$ (Theorem~\ref{thm:tri}) in $1/n$ and are machine-checked
+symbolically; the truncation at $e_2$ was additionally checked against exact
+Fraction evaluations at $n=400$ for $k=1,\dots,5$, with residuals bounded by
+$|e_3|/n^3$ (Section~\ref{sec:repro}).
+
+\begin{corollary}[Exact $k=1$ specials]\label{cor:k1}
+For $k=1$:
+\[
+P(\triangle) = \frac{2}{(n-1)^{3}}\quad\text{and}\quad
+P(\text{4-cycle}) = \frac{2}{(n-1)^{4}}
+\quad\text{for all } n.
+\]
+\end{corollary}
+These were simplified to closed form from the general formulae and
+machine-checked symbolically.
+
+\begin{remark}[Exact form of the naive gap]\label{rem:gap}
+The naive $G(n,p)$-style prediction for a triple is $q^{3}=(1-A^{2})^{3}$; the exact
+gap is, by identity~\eqref{eq:triident},
+\[
+q^{3}-P(\triangle) = -A^{3}(C-A)\bigl(3-A^{2}-AC-C^{2}\bigr)\;\ge\;0,
+\]
+a rational function of $(n,k)$ that starts contributing only from order $n^{-5}$
+(the orders $n^{-3},n^{-4}$ coefficients of the gap are $0$);
+its first non-zero terms are $\ \frac{6k^{2}}{n^{5}}
+-\frac{3k^{2}(7k-9)}{n^{6}}+\cdots$. Nevertheless the \emph{relative} error of the
+naive prediction is large because the truth itself is small; see
+Table~\ref{tab:naive}.
+
+\medskip
+At matched edge density $q$ (same expected edges as $G(n,p)$), the exact
+$1/n$-expansion of the ratio is
+\[
+\frac{P(\triangle)}{q^{3}}
+= \underbrace{1-\frac{3}{4k}}_{r_0}
++ \underbrace{\frac{3(4k-3)}{8k}}_{r_1}\frac{1}{n}+O(n^{-2}),
+\]
+which is analysed next (Proposition~\ref{prop:er}).
+\end{remark}
+
+\begin{table}[t]
+\centering
+\caption{Exact $\mathbb E T$ vs.\ the naive $(G(n,p)$-style) prediction
+$(1-A^{2})^{3}\binom{n}{3}$ at $n=200$. From \texttt{results/expectations\_table.csv}.}
+\label{tab:naive}
+\begin{tabular}{rrrrr}
+\toprule
+$k$ & exact $\mathbb ET$ & naive & rel.\ error & naive/exact\\
+\midrule
+1 & 0.333325 & 1.323275 & 2.9699 & 3.97\\
+2 & 6.616147 & 10.506404 & 0.5880 & 1.59\\
+3 & 26.592529 & 35.191162 & 0.3233 & 1.32\\
+4 & 67.768683 & 82.784150 & 0.2216 & 1.22\\
+5 & 137.416009 & 160.459789 & 0.1677 & 1.17\\
+6 & 242.574103 & 275.163298 & 0.1343 & 1.13\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The Erd\H os--R\'enyi contrast at matched density}\label{sec:er}
+
+The natural comparison uses the same expected edge density
+$q=2p-p^{2}$, $p=\tfrac{k}{n-1}$, in the Erd\H os--R\'enyi model
+$G(n,q)$, for which $\mathbb E T_{ER} = \binom{n}{3}q^{3}$ exactly.
+
+\begin{proposition}[Triangle and 4-cycle ratios]\label{prop:er}
+As $n\to\infty$ with $k\ge 1$ fixed:
+\[
+\rho_\triangle:=\frac{\mathbb E T_{k\text{-out}}}{\mathbb E T_{ER}}
+= \frac{P(\triangle)}{q^{3}}
+\;\longrightarrow\; 1-\frac{3}{4k},
+\]
+with $1/n$-term $r_1=\frac{3(4k-3)}{8k}$ and next term
+$-\frac{3(3k^{2}-21k+14)}{16k}\cdot n^{-2}$; and
+\[
+\rho_{C_4}:=\frac{\mathbb E[\#C_4]_{k\text{-out}}}{\mathbb E[\#C_4]_{ER}}
+\;\longrightarrow\;1-\frac{1}{k}+\frac{1}{8k^{2}},
+\]
+with $1/n$-term $\frac{8k^{2}-8k+1}{4k^{2}}$.
+\end{proposition}
+
+\begin{proof}
+$P(\triangle)/q^{3}$ and the closed form for $P(C_4)$
+(computed in Lemma~\ref{lem:c4} below) divided by $q^{4}$ are rational functions of
+$(n,k)$. The expansions are exact series expansions of those two ratios in $1/n$
+(machine-checked symbolically; the leading terms simplify to the stated
+polynomial expressions in $k$).\qed
+\end{proof}
+
+\begin{lemma}[4-cycle closed form]\label{lem:c4}
+\[
+P(C_4)=1-4A^{2}+4A^{2}B+2A^{4}-4A^{2}B^{2}+B^{4},
+\]
+for a fixed labelled 4-cycle $\{a b c d\}$, with
+$\mathbb E[\#\text{labelled }C_4] = (n)_4 P(C_4)$ and
+$\ \mathbb E[\#\text{unlabelled }C_4] = 3\binom{n}{4}P(C_4)$.
+\end{lemma}
+\begin{proof}
+Apply Theorem~\ref{thm:general} to the template $C_4$; the signed sum over the
+$2^{4}=16$ subsets groups into classes by edge pattern (verified symbolically: the
+Theorem~\ref{thm:general} sum equals the closed form as an identity in
+$(n,k)$).\qed
+\end{proof}
+
+\begin{table}[t]
+\centering
+\caption{Triangles: exact series vs.\ limits ($n=1600$ row of
+\texttt{results/asymptotic\_convergence.csv}).}
+\label{tab:asy}
+\begin{tabular}{rrrrrr}
+\toprule
+$k$ & $\mathbb E_{n=1600}$ & $e_0$ & $(\mathbb E-e_0)\,n$ & $e_1$ & $\rho_\triangle$ ($\to 1-\tfrac3{4k}$)\\
+\midrule
+1 & 0.3333332 & $\tfrac13$ & $-2.1\cdot10^{-4}$ & $0$ & 0.250235 ($0.250$)\\
+2 & 6.6604086 & $\tfrac{20}{3}$ & $-10.0129$ & $-10.0000$ & 0.625587 ($0.625$)\\
+3 & 26.9493363 & $27$ & $-81.0619$ & $-81.0000$ & 0.750704 ($0.750$)\\
+4 & 69.1382595 & $\tfrac{208}{3}$ & $-312.1181$ & $-312.0000$ & 0.813262 ($0.8125$)\\
+5 & 141.1354011 & $\tfrac{425}{3}$ & $-850.0249$ & $-850.0000$ & 0.850797 ($0.850$)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interpretation}
+For every fixed $k\ge1$, the $k$-out graph has \emph{asymptotically}
+$\left(1-\tfrac{3}{4k}\right)$-fraction of the triangles that an
+Erd\H{o}s--R\'enyi graph of equal expected edge density has: $\tfrac14$ at $k=1$,
+$\approx\tfrac23$ approaching as $k\to\infty$. This is a large, real effect in the
+opposite direction from most ``good clustering'' enhancers (Barab\'asi--Albert,
+Watts--Strogatz): the $k$-out budget spreads links thin and thereby makes the
+neighbourhoods of vertices locally tree-like, and the effect is \emph{stronger
+for small $k$}. Together with the exact finite-$n$ formulae, the constants
+$1-\tfrac{3}{4k}$ and $1-\tfrac{1}{k}+\tfrac{1}{8k^{2}}$ quantify what practitioners
+trade away (or gain, for triangle-suppression purposes) when replacing an
+Erd\H{o}s--R\'enyi null by a degree-bounded $k$-out null.
+
+\section{Stars: exact cancellation and explicit constants}\label{sec:stars}
+
+We use $K_{1,m}$ (a star with $m$ leaves) at \emph{fixed} vertices
+$\{u$ (center), $v_1,\dots,v_m\ ($leaves$)\}$ and $N_{K_{1,m}}$ for the count of
+unlabelled copies.
+
+\begin{theorem}[Stars]\label{thm:stars}
+Fix $m\ge2$ and $k\ge1$. Exactly,
+\begin{equation}\label{eq:starclosed}
+P(K_{1,m})
+=\sum_{j=0}^{m}(-1)^{j}\binom{m}{j}\,\frac{\binom{n-1-j}{k}}{\binom{n-1}{k}}\,
+\Bigl(\frac{\binom{n-2}{k}}{\binom{n-1}{k}}\Bigr)^{j},
+\end{equation}
+and the first non-zero term of $P(K_{1,m})$ in powers of $1/n$ is \emph{exactly of
+order} $n^{-m}$, with finite non-zero constant
+\begin{equation}\label{eq:cmconst}
+\lim_{n\to\infty} n^{m} P(K_{1,m}) \;=\; c_m(k)
+\;:=\;\sum_{j=0}^{m}\binom{m}{j}\,(k)_{j}\,k^{m-j} \;>\;0.
+\end{equation}
+Consequently
+\[
+\mathbb E\bigl[\,N_{K_{1,m}}\bigr]=\frac{(n)_{m+1}}{m!}\,P(K_{1,m})
+=\frac{c_m(k)}{m!}\,n\,\bigl(1+o(1)\bigr) \quad\text{as }n\to\infty,
+\]
+with explicit polynomial constants $c_2(k)=k(4k-1)$,
+$c_3(k)=2k(4k^2-3k+1)$, $c_4(k)=k(16k^3-24k^2+19k-6)$, $c_5(k)=
+2k(16k^4-40k^3+55k^2-40k+12)$, $c_6(k)=k(64k^5-240k^4+500k^3-615k^2+418k-120)$
+(Table~\ref{tab:cm}).
+\end{theorem}
+
+\begin{proof}[Proof]
+\eqref{eq:starclosed} is the specialization of Theorem~\ref{thm:general} to the
+star: a subset $F$ of the $m$ star edges consists of $j$ edges, all incident to the
+center; the spanning degrees are $d_{\text{center}} = j$ and $d_{v_i}=1$ for the
+$j$ selected leaves and $0$ for the others. Hence each $F$ of size $j$ contributes
+sign $(-1)^{j}$ times the product
+$\frac{\binom{n-1-j}{k}}{\binom{n-1}{k}}\,
+\bigl(\frac{\binom{n-2}{k}}{\binom{n-1}{k}}\bigr)^{j}$, and there are
+$\binom{m}{j}$ such subsets, summing to \eqref{eq:starclosed}. The identity between
+\eqref{eq:starclosed} and the general formula is machine-checked for
+$m=2,\dots,6$ (as identities in $(n,k)$ over the rationals).
+
+For \eqref{eq:cmconst}: the orientation-invariant Theorem~\ref{thm:omega} below
+(stated and proved in Section~\ref{sec:omega}) applies with $H=K_{1,m}$,
+$v=m+1$, $e=m$, so $v-e=1$:
+$\mathbb E[\#\text{labelled copies}]=\Omega_k(K_{1,m})\,n\,(1+o(1))$ with
+$\Omega_k(K_{1,m})=\sum_{j}\binom{m}{j}(k)_{j}k^{m-j}$ (each edge is assigned to
+either its center or its leaf; assignments with $j$ center-owned edges contribute
+$\binom{m}{j}(k)_{j}k^{m-j}$). Dividing by $|\mathrm{Aut}(K_{1,m})|=m!$ and using
+$\mathbb E[N_{K_{1,m}}]=(n)_{m+1}P(K_{1,m})/m!$ yields
+$n^{m}P(K_{1,m})\to c_m(k)$, which is finite and positive: all summands of
+\eqref{eq:cmconst} are non-negative and the $j=0$ summand is $k^{m}>0$.
+\end{proof}
+
+\begin{remark}
+We emphasize two points of honesty about Theorem~\ref{thm:stars}.
+(a) The identity \eqref{eq:cmconst}, with the closed-form constants verified
+numerator-by-numerator in \texttt{src/experiments.py} (\texttt{STAR\_C},
+$m\le6$), rests on Theorem~\ref{thm:omega}, whose proof is complete in this paper
+(Section~\ref{sec:omega}).
+(b) The exact orders claim — that \emph{no} term of order between $n^{0}$ and
+$n^{-m}$ survives in ~\eqref{eq:starclosed} — \emph{follows} from
+\eqref{eq:cmconst} with $c_m(k)>0$ finite: any lower-order non-zero term would blow
+up $n^{m}P(K_{1,m})$. So the exact-order statement is \emph{equivalent} to the
+finite-non-zero-limit statement, and both carry the weight of
+Theorem~\ref{thm:omega}. The $m\leq6$ cases were in addition directly
+series-expanded symbolically, and the constants $c_m(k)$ assessed numerically
+with the residual decaying like $1/n$ (Table~\ref{tab:cm}; e.g.\
+$n^{6}P(K_{1,6})$ at $k=2$: $930.1018$ at $n=1600$ vs.\ $c_6(2)=928$).
+\end{remark}
+
+\begin{table}[t]
+\centering
+\caption{Stars: $n^{m}P(K_{1,m})$ converging to $c_m(k)$ ($n=1600$ rows of
+\texttt{results/star\_cancellation.csv}; residuals $O(1/n)$).}
+\label{tab:cm}
+\begin{tabular}{rrrrr}
+\toprule
+$m$ & $k$ & $n^{m}P$ at $n=1600$ & $c_m(k)$ & $\mathbb E[N_{K_{1,m}}]$ at $n=1600$\\
+\midrule
+2 & 2 & 14.0037 & 14 & 11182.0\\
+2 & 3 & 32.9887 & 33 & 26341.5\\
+3 & 2 & 44.0300 & 44 & 11697.3\\
+3 & 3 & 167.9715 & 168 & 44624.6\\
+4 & 2 & 128.1500 & 128 & 8490.1\\
+4 & 3 & 801.1104 & 801 & 53074.3\\
+5 & 2 & 352.6002 & 352 & 4657.4\\
+5 & 3 & 3619.9307 & 3618 & 47814.9\\
+6 & 2 & 930.1018 & 928 & 2039.9\\
+6 & 3 & 15648.4509 & 15633 & 34320.3\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The orientation invariant: general asymptotics}\label{sec:omega}
+
+Fix a template $H$ with $v$ vertices and $e$ edges. An \emph{edge-owner
+assignment} is a function $\sigma: E(H)\to V(H)$ with $\sigma(uv)\in\{u,v\}$ for
+every edge $uv$; let $t_x(\sigma) = |\sigma^{-1}(x)|$ be the number of edges assigned
+to $x$. Assignments correspond bijectively to \emph{orientations} of $H$'s edges
+(towards the fixed endpoint ``owner'', or equivalently edge $\to$ one of its two
+endpoints). Write $(k)_t$ for the falling factorial.
+
+\begin{theorem}[Orientation invariant]\label{thm:omega}
+For every fixed finite simple $H$ and fixed $k\ge1$,
+\[
+\mathbb E\bigl[\,\#\{\text{labelled copies of }H\}\,\bigr]
+=\Omega_k(H)\,n^{v-e}\,(1+o(1))
+\quad\text{ as } n\to\infty,
+\]
+where
+\[
+\Omega_k(H)\;=\;\sum_{\sigma\in\{0,1\}^{E(H)}}\
+\prod_{x\in V(H)}(k)_{t_x(\sigma)}.
+\]
+Moreover, $\Omega_k(H)=0$ if and only if \emph{no} assignment $\sigma$ satisfies
+$t_x(\sigma)\le k$ for all $x$; equivalently, iff every orientation of $H$ leaves
+some vertex owning $\ge k+1$ edges; equivalently (via the orientation identity) iff
+$H$ cannot be oriented such that each vertex has out-degree at most $k$ —
+i.e.\ $H$ admits no orientation of maximum owned-degree $\le k$.
+\end{theorem}
+
+\begin{proof}
+Fix the template labels (the identity embedding, by symmetry). For an assignment
+$\sigma$ let $Y_\sigma$ be the event that, for every edge $uv \in E(H)$, the
+\emph{owner} $\sigma(uv)$ has the \emph{other} endpoint of $uv$ in its chosen set:
+if $uv$ is owned by $u$, this means $v\in S_u$. If $Y_\sigma$ holds, then every
+template edge is present (each edge is chosen by its owner), so
+$Y_\sigma\subseteq\{\text{all template edges present}\}$; conversely, if all edges
+are present, then every edge has at least one choosing endpoint, and choosing one
+such endpoint per edge extends to an assignment; hence
+$\{\text{all template edges present}\}=\bigcup_\sigma Y_\sigma$.
+
+The chooser sets are independent across vertices, and the probability that a
+particular chooser $x$ places at least its $t_x(\sigma)$ prescribed target-neighbours
+into its $k$-subset is exactly $(k)_{t_x(\sigma)}/(n-1)_{t_x(\sigma)}$
+(the count of $k$-subsets containing $t$ specific targets divided by
+$\binom{n-1}{k}$). Hence, by independence,
+\[
+\Pr(Y_\sigma) \;=\;\prod_{x}\frac{(k)_{t_x(\sigma)}}{(n-1)_{t_x(\sigma)}}\;.
+\]
+Since $\sum_x t_x(\sigma) = e$, we get
+\[
+(n)_{v}\,\Pr(Y_\sigma) =
+\frac{(n)_{v}}{\prod_x (n-1)_{t_x(\sigma)}}\ \prod_x (k)_{t_x(\sigma)}
+= n^{v-e}\,\Omega(\sigma)\,\bigl(1+O(n^{-1})\bigr),
+\]
+uniformly in $\sigma$, where $\Omega(\sigma)=\prod_x (k)_{t_x(\sigma)}$.
+Summing over the $2^{e}$ assignments:
+\[
+(n)_{v}\,\Pr\Bigl(\bigcup_\sigma Y_\sigma\Bigr) = \Omega_k(H)\,n^{v-e}\,\bigl(1+O(n^{-1})\bigr)
+\;\;+\;\; \text{(over-count correction)}.
+\]
+Two-sided control of the correction: for $\sigma\ne\tau$, the event
+$Y_\sigma\cap Y_\tau$ requires at least one edge $uv$ to be chosen by both
+endpoints (the edge on which they disagree must lie in both), an event of
+probability $\frac{k(k-1)}{(n-1)(n-2)}=O(n^{-2})$; the remaining $e-1$ or fewer
+edges contribute witnesses at $\ge n^{-1}$ each, so
+$\Pr(Y_\sigma\cap Y_\tau) = O(n^{-e-1})$.
+There are at most $\binom{2^{e}}{2} = O(1)$ pairs $(\sigma,\tau)$, hence
+by the second Bonferroni inequality (applied to $\bigcup_\sigma Y_\sigma$),
+\[
+\Bigl|\ \Pr\Bigl(\bigcup_\sigma Y_\sigma\Bigr) - \sum_{\sigma}\Pr(Y_\sigma)\Bigr|
+\ \le\ \sum_{\sigma<\tau}\Pr\bigl(Y_\sigma\cap Y_\tau\bigr)
+= O(n^{-e-1}),
+\]
+so \ $(n)_v\Pr(\cup Y_\sigma) = \Omega_k(H)\, n^{v-e} (1+o(1)) + O(n^{v-e-1})$,
+which is the claim.
+
+The ``iff'' statement: $\Omega_k(H)=\sum_\sigma\prod_x(k)_{t_x(\sigma)}$ is a sum
+of non-negative terms. If some assignment $\sigma$ satisfies $t_x(\sigma)\le k$
+for every $x$, then all its factors $(k)_{t_x(\sigma)}$ are positive integers
+(each at least $1$), so its summand is $\ge 1$ and $\Omega_k(H)\ge 1>0$.
+Conversely, if every $\sigma$ has some $t_x(\sigma)\ge k+1$, then that factor
+$(k)_{t_x(\sigma)}=0$ (the falling factorial vanishes once its length exceeds
+$k$), so every summand — and hence $\Omega_k(H)$ — is $0$. \qed
+\end{proof}
+
+\begin{corollary}[Instances]\label{cor:omega}
+Machine-verified instances (Section~\ref{sec:repro}):
+\[
+\Omega_k(K_3) = 8k^{3}-6k^{2},\qquad
+\Omega_k(C_4) = 2k^{2}(8k^{2}-8k+1),\qquad
+\Omega_k(K_{1,m}) = \sum_{j}\binom{m}{j}(k)_{j}k^{m-j},
+\]
+and, as a boundary example, $\Omega_1(K_4-e)=0$ (no orientation of the 5-edge
+butterfly keeps every vertex's owned degree $\le1$), consistent with
+$\Omega_1(K_3)=2>0$. Dividing by $|\mathrm{Aut}(H)|$ gives the unlabelled-limit;
+e.g.\ $\lim \mathbb E T_{K_3}^{unlabelled} = (8k^3-6k^2)/6=(4k^3-3k^2)/3$ as in
+Theorem~\ref{thm:triasy}.
+\end{corollary}
+
+\begin{remark}
+(a) The orientation invariant makes the star constants transparent
+($\Omega_k(K_{1,m}) = c_m(k)$, Theorem~\ref{thm:stars}). It also illustrates the
+budget-jam threshold: $\Omega_k(H)$ contrasts sharply with $G(n,p)$, where the
+leading behaviour for fixed $H$ at matched density is $q^{e}n^{v-e}$, i.e.\ an
+$(2k/n)^{e}$-type scale: the $k$-out analogue $\Omega_k(H)$ \emph{cannot} grow
+beyond what the per-vertex budget $k$ can support in owned-degree terms, which is a
+strictly non-ER criterion — e.g.\ at $k=1$, $K_4$ is impossible ($\Omega_1(K_4)=0$),
+while $K_3$ has $\Omega_1(K_3)=2$ copies-of-kind asymptotics.
+(b) When $k \geq \Delta(H)$ (max degree), the identity-assignment ($\sigma = $ all
+edges owned by their ``first'' endpoint under some orientation of $H$ where each
+vertex owns $\le \Delta(H)\le k$) works, so $\Omega_k(H)>0$ always for fixed
+$H$ and $k\ge \Delta(H)$.
+\end{remark}
+
+\section{Exact second moment of the triangle count}\label{sec:variance}
+
+Let $T$ again be the (unlabelled) triangle count.
+
+\begin{theorem}[Exact first two moments]\label{thm:variance}
+For all $(n,k)$, exactly
+\[
+\mathbb E T^{2} \;=\; \binom{n}{3}P_3 \;+\; 12\binom{n}{4}P_{K_4-e} \;+\;
+n\binom{n-1}{2}\binom{n-3}{2}P_{\text{bowtie}}\;+\;
+\binom{n}{3}\binom{n-3}{3}P_{2\triangle},
+\]
+where $P_3 = P(\triangle)$ (Thm.~\ref{thm:tri}) and $P_{K_4-e}$, $P_{\text{bowtie}}$,
+$P_{2\triangle}$ are the Theorem~\ref{thm:general} probabilities of the three
+\emph{union graphs}: two triangles sharing an edge ($K_4$ minus an edge), sharing a
+vertex (the bowtie), and disjoint. In particular $\operatorname{Var}(T) = \mathbb
+E T^{2} - (\mathbb ET)^{2}$ is an exact rational function of $(n,k)$, and as
+$n\to\infty$ with fixed $k$:
+\[
+\operatorname{Var}(T) = v_0+\frac{v_1}{n}+O(n^{-2}),\qquad
+v_0=\frac{4k^{3}-3k^{2}}{3},\quad
+v_1=-\frac{k^{2}(16k^{2}-21k+7)}{2},
+\]
+so that $\operatorname{Var}(T)\to \mathbb E T$ (Var $=$ mean asymptotically) with
+negative $1/n$-correction $v_1 <0$ (underdispersion at every finite $n$ staged,
+Table~\ref{tab:var}).
+\end{theorem}
+
+\begin{proof}
+$T$ counts unordered triples; writing $T=\sum_{s}\mathbf 1_s$ over the
+$\binom{n}{3}$ triples, we get
+$\mathbb ET^{2} = \sum_{s,t}\Pr(E(s)\cup E(t))$, the (ordered) pair classes
+handled by the \emph{overlap-pattern decomposition} of the two triples:
+$s=t$ ($\binom{n}{3}$ pairs, union = one triangle);
+$|s\cap t|=2$ ($12\binom{n}{4}$ ordered pairs; union $=K_4-e$);
+$|s\cap t|=1$ ($n\binom{n-1}{2}\binom{n-3}{2}$ pairs; union $=$ bowtie);
+$|s\cap t|=0$ ($\binom{n}{3}\binom{n-3}{3}$ pairs; union $=$ two disjoint
+triangles). Each union's edge-present probability is a
+Theorem~\ref{thm:general} value at the respective template sizes
+($3$,$5$,$6$,$6$ edges on $3$,$4$,$5$,$6$ vertices). The series coefficients were
+derived and checked symbolically (all identities machine-verified; the
+$\operatorname{Var}$-series was additionally checked against exact Fraction
+arithmetic at $n=400$).\qed
+\end{proof}
+
+\begin{conjecture}[Poisson-type limit]\label{conj:poisson}
+For every fixed $k\ge1$, as $n\to\infty$, the triangle count
+$T$ converges in distribution to $\text{Poisson}\bigl(\tfrac{4k^3-3k^2}{3}\bigr)$.
+\end{conjecture}
+We \underline{do not} prove Conjecture~\ref{conj:poisson}; we establish only the two
+exact moments (Theorem~\ref{thm:variance}), whose agreement with the Poisson
+moments (mean $=$ variance asymptotically) is suggestive, and we checked by Monte
+Carlo that the exact mean and exact variance agree with the sampled moments in
+Table~\ref{tab:mc} to within $|z|\le 1.43$ in all seven staged $(n,k)$ cells
+(dispersion $\operatorname{Var}/\mathbb E$ at $n=200$: $0.985$ at $k=1$, $0.966$
+at $k=2$, $0.947$ at $k=3$). A proof presumably requires a third-moment method or
+the $G(n,p)$-style Janson machinery under the $k$-out correlated conditioning, and
+is left open.
+
+\begin{table}[t]
+\centering
+\caption{Monte Carlo vs.\ exact moments (\texttt{results/monte\_carlo.csv}; the
+sampling corrects for the symmetrization via an OR-merge before the matrix
+product, cross-checked against a naive Fisher-consistency sampler).}
+\label{tab:mc}
+\begin{tabular}{rrrrrrrr}
+\toprule
+$n$ & $k$ & reps & MC mean & exact $\mathbb E$ & $z$ & MC var / exact var & $z$\\
+\midrule
+50 & 2 & 20000 & 6.46805 & 6.45824 & $+0.58$ & 5.679 / 5.687 & $-0.13$\\
+50 & 3 & 20000 & 25.32875 & 25.34068 & $-0.36$ & 21.744 / 21.437 & $+1.41$\\
+100 & 2 & 20000 & 6.57570 & 6.56458 & $+0.63$ & 6.154 / 6.133 & $+0.34$\\
+100 & 3 & 20000 & 26.21760 & 26.18013 & $+1.09$ & 23.662 / 23.669 & $-0.03$\\
+200 & 3 & 20000 & 26.64355 & 26.59253 & $+1.43$ & 25.333 / 25.182 & $+0.60$\\
+200 & 4 & 20000 & 67.80790 & 67.76868 & $+0.70$ & 63.251 / 63.114 & $+0.22$\\
+500 & 3 & 4000 & 26.80175 & 26.83760 & $-0.44$ & 26.404 / 26.234 & $+0.29$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Dispersion of the triangle count (\texttt{results/variance\_table.csv};
+$k=1$,$2$ shown; $k=3$ staged in the file).}
+\label{tab:var}
+\begin{tabular}{rrrrr}
+\toprule
+$k$ & $n$ & $\operatorname{Var}/\mathbb E$ & $(\operatorname{Var}-v_0)n$ & $v_1$\\
+\midrule
+1 & 200 & 0.98515 & $-0.9916$ & $-1.0000$\\
+2 & 200 & 0.96558 & $-55.6546$ & $-58.0000$\\
+1 & 1000 & 0.99701 & $-0.9983$ & $-1.0000$\\
+2 & 1000 & 0.99286 & $-57.5259$ & $-58.0000$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Verification and reproducibility}\label{sec:repro}
+
+All numeric claims in this paper are reproduced by the public repository (see
+below for the placement), which contains the source code, the generated data, and
+the verification documents. The repository's verification stack:
+
+\begin{enumerate}
+\item \textbf{Symbolic}: \texttt{src/verify\_symbolic.py} — 36 machine-verified
+identities over exact rational algebra (sympy), including Theorem~\ref{thm:general}
+vs.\ closed forms for triangles/$C_4$/stars ($m\le6$), the identity
+\eqref{eq:triident}, $B=AC$, the $k=1$ specials of Corollary~\ref{cor:k1}, the
+series coefficients of Theorems~\ref{thm:triasy} and \ref{thm:variance}
+(with $e_3$-based truncation error bounds), the edge identity, the matched-density
+ratio constants of Proposition~\ref{prop:er}, and the orientation-invariant
+instances of Corollary~\ref{cor:omega}.
+\item \textbf{Exhaustive enumeration}: for small $n$, \emph{all}
+$\prod_{v}\binom{n-1}{k}$ choice profiles are enumerated and the copy counts
+matched exactly (exact-Fraction or float; 25 staged cases; largest difference
+$2.2\cdot10^{-15}$; the $(n,k)=(5,2)$ second-moment case yields
+$\operatorname{Var}(T) = \tfrac{15985}{5832}$ exactly on both sides).
+\item \textbf{Monte Carlo}: at larger $n$, Fisher-consistent sampling
+(symmetrized by an explicit OR-merge) with the staged cells of
+Table~\ref{tab:mc}: worst $|z| = 1.43$ on means, $1.41$ on variances, over
+4{,}000--20{,}000 replicates per cell.
+\item \textbf{Unit tests}: \texttt{pytest} (\texttt{tests/test\_kout.py}),
+43 tests, all passing (as of the release date recorded in the repository).
+\end{enumerate}
+
+\medskip
+\noindent\textbf{Reproducibility statement.} The repository contains:
+\texttt{src/} (formulae, closed forms, exact-Fraction paths, exhaustive
+enumeration, Monte Carlo); \texttt{results/*.csv} (all tables behind
+Figures/Tables in this paper); \texttt{research/} (the research process documents:
+candidate scoring, literature review, evidence ledger, novelty assessment, hostile
+review, limitations, journal selection); and \texttt{paper/} (this manuscript and
+its bibliography). Running \texttt{python src/experiments.py} regenerates every
+CSV from scratch (Monte Carlo seeded); running \texttt{python} with the script
+\texttt{src/verify\_symbolic.py} re-runs the 36 symbolic checks;
+\texttt{pytest} re-runs the 43 tests. Software: Python 3.14 with numpy, sympy (exact arithmetic), pytest.
+No proprietary data are used; the literature checks cite publicly retrievable
+sources with their access dates.
+
+\section{Related literature, in more detail}\label{sec:related}
+
+\paragraph{Global $k$-out structure.} Connectivity and Hamiltonicity of
+$G(n,k\text{-out})$ and close relatives: \cite{fennerFrieze1982}
+(connectivity of random $m$-orientable graphs and digraphs, Combinatorica 2(4),
+1982); the textbook chapter \cite[Ch.~22]{friezeKaronski2015} (connectivity,
+perfect matchings, Hamilton cycles, nearest-neighbour graphs; no subgraph-count
+content — we verified the section structure against the authors' full text,
+retrieved October 2026); finite-$n$ connectivity bounds \cite{soodYagan2020};
+robustness and giant component \cite{elumarSoodYagan2023}; $k$-out subgraphs of
+large hosts \cite{friezeJohansson2014}.
+
+\paragraph{Triangle/clustering in correlated models.} For random key graphs
+(Eschenauer--Gligor key pools), \ \cite{yaganMakowski2009} proved a zero-one law
+for triangle presence and \cite{yaganMakowski2017} computed the clustering
+coefficient and contrasted it with matched ER — the closest methodological
+precedent to our Section~\ref{sec:er}, but on a different model (uniform key pools
+produce a distinct dependence structure and a zero-one law, not our
+$1-\tfrac{3}{4k}$ density-ratio effect). Clustered random graph constructions with
+explicit triangle stubs: \cite{newman2009}; epidemic percolation on such
+constructions: Sood's thesis \cite{sood2024thesis} (triangles as inserted building
+blocks, ``doubly-Poisson'' pairwise joint distributions; the $k$-out model enters
+only via connectivity remarks — checked against the full text, retrieved October
+2026).
+Clustering \emph{index} estimates are given in \cite{islakYesiloglu2024} for
+Erd\H{o}s--R\'enyi with simulation for regular, Barab\'asi--Albert and
+Watts--Strogatz models; the $k$-out model does not appear.
+
+\paragraph{$G(n,p)$ baselines.} \ The expected numbers
+$\binom{n}{v}p^{e}$, the Poisson/normal dichotomy of subgraph counts
+\cite{jansonLuczakRucinski2000}, and the classical zero-one/threshold framework of
+\cite{bollobas2001} are the backdrop for our matched-density comparison; none of
+them applies verbatim because of Lemma~\ref{lem:negcorr}.
+
+\paragraph{What is not known (to us).} Beyond the Poisson-type Conjecture
+\ref{conj:poisson}: (a) exact higher moments or the full distribution of $T$;
+(b) second moments for general $H$; (c) regimes with $k=k(n)\to\infty$ (dense
+$k$-out), where new phenomena must appear since
+$\mathbb E T\sim \tfrac{(4/3)k^3}{\cdot}$ would need to grow and cross the
+$G(n,p)$ law; (d) clustering coefficients of the $k$-out model at fixed $k$ (which
+are not the ratio $\rho_\triangle$ and involve degree conditioning).
+
+\section{Limitations}\label{sec:limits}
+
+(1) Our distributional results are first/second moment only;
+Conjecture~\ref{conj:poisson} is not proven. (2) All asymptotic statements assume
+fixed $k$ and fixed $H$; $k$ growing with $n$ is open. (3) The general-$m$ star
+constants are explicit polynomials up to $m=6$ (tabulated); the general
+formula $\sum_j\binom{m}{j}(k)_j k^{m-j}$ is proven via
+Theorem~\ref{thm:omega} for all $m$. (4) The orientation-invariant proof is
+complete, but its instance checks in the repository cover structured families
+($K_3$, $C_4$, stars, $K_4-e$); a general-implementation cross-check for arbitrary
+$H$ was not built in-session. (5) The novelty statement
+(Section~\ref{sec:repro}) is a negative claim from a targeted search (documents in
+the repository), not a proof of no-overlap: residual risks are recorded in the
+evidence ledger.
+
+\section*{Data and code availability}
+All code, data (CSV), and research documentation are in the public repository
+accompanying this work (see the reproducibility statement in
+Section~\ref{sec:repro}).
+
+\section*{Competing interests}
+None. This work received no funding.
+
+\appendix
+
+\section{Star constants $c_m(k)$ for $m\le6$}\label{app:cm}
+\[
+\begin{aligned}
+c_2(k) &= k\,(4k-1),\\
+c_3(k) &= 2k\,(4k^{2}-3k+1),\\
+c_4(k) &= k\,(16k^{3}-24k^{2}+19k-6),\\
+c_5(k) &= 2k\,(16k^{4}-40k^{3}+55k^{2}-40k+12),\\
+c_6(k) &= k\,(64k^{5}-240k^{4}+500k^{3}-615k^{2}+418k-120).
+\end{aligned}
+\]
+Each admits the structural form
+$c_m(k)=\sum_{j=0}^{m}\binom{m}{j}(k)_j\,k^{m-j}$
+(Theorem~\ref{thm:omega}) and the tabulated closed forms agree with it exactly
+(machine-checked for $m=2,\dots,6$). Values at $k=2,3$ (used in
+Table~\ref{tab:cm}): $c_2: 14, 33$; $c_3: 44, 168$; $c_4: 128, 801$;
+$c_5: 352, 3618$; $c_6: 928, 15633$.
+
+\section{Verification protocol details}\label{app:verify}
+The full verification documents (candidate scoring, literature review, evidence
+ledger, novelty assessment, two hostile-review passes, limitations, journal
+selection) accompany the repository under \texttt{research/}. The evidence ledger
+records, per claim: the theorem number, the check that confirms it (symbolic /
+enumeration / Monte Carlo / exact spot values), and any residual risks about the
+literature survey. Two independent hostile passes over the manuscript were
+recorded (pass 1: correctness-oriented attacks; pass 2: significance- and
+reproducibility-oriented attacks), including the discovery and repair of a Monte
+Carlo over-counting bug (documented; all Monte Carlo rows were regenerated after
+the fix).
+
+\begin{thebibliography}{12}
+
+\bibitem{friezeKaronski2015}
+A.~Frieze and M.~Karo\'nski,
+\emph{Introduction to Random Graphs},
+Cambridge University Press, Cambridge, 2015.
+(Ch.~22 treats random $k$-out graphs: connectivity, perfect matchings, Hamilton
+cycles; the authors' current full text is posted at
+\url{https://www.math.cmu.edu/~af1p/BOOK.pdf}, accessed 2026-10-18.)
+
+\bibitem{fennerFrieze1982}
+T.~I.~Fenner and A.~M.~Frieze,
+On the connectivity of random $m$-orientable graphs and digraphs,
+\emph{Combinatorica} \textbf{2} (1982), no.~4, 347--359.
+
+\bibitem{friezeJohansson2014}
+A.~M.~Frieze and T.~Johansson,
+On random $k$-out sub-graphs of large graphs,
+arXiv:1405.2129 (2014).
+
+\bibitem{bollobas2001}
+B.~Bollob\'as,
+\emph{Random Graphs}, 2nd ed.,
+Cambridge University Press, Cambridge, 2001.
+
+\bibitem{jansonLuczakRucinski2000}
+S.~Janson, T.~{\L}uczak, and A.~Ruci\'nski,
+\emph{Random Graphs},
+Wiley-Interscience, New York, 2000.
+
+\bibitem{islakYesiloglu2024}
+{\"U}.~I{\c{s}}lak and B.~Ye{\c{s}}ilo{\u{g}}lu,
+Analysis of clustering and degree index in random graphs and complex networks,
+arXiv:2408.06451 (2024, v2 2025); published version in Journal of Applied
+Probability, DOI 10.1017/jpr.2025.10063.
+
+\bibitem{yaganMakowski2009}
+O.~Ya{\u{g}}an and A.~M.~Makowski,
+A zero-one law for the existence of triangles in random key graphs,
+arXiv:0910.0499 (2009).
+
+\bibitem{yaganMakowski2017}
+O.~Ya{\u{g}}an and A.~M.~Makowski,
+Counting triangles, tunable clustering and the small-world property in random key
+graphs (extended version),
+arXiv:1701.03758 (2017).
+
+\bibitem{elumarSoodYagan2023}
+E.~C.~Elumar, M.~Sood, and O.~Ya{\u{g}}an,
+On the robustness, connectivity and giant component size of random $K$-out graphs,
+arXiv:2311.02319 (2023).
+
+\bibitem{soodYagan2020}
+M.~Sood and O.~Ya{\u{g}}an,
+Tight bounds for connectivity of random $K$-out graphs,
+arXiv:2006.10638 (2020); an associated version appeared in IEEE ICC 2021,
+DOI 10.1109/ICC42927.2021.9500694.
+
+\bibitem{newman2009}
+M.~E.~J.~Newman,
+Random graphs with clustering,
+\emph{Physical Review Letters} \textbf{103} (2009), 058701.
+
+\bibitem{sood2024thesis}
+M.~Sood,
+\emph{Structural Heterogeneity and Performance in Stochastic Networks: From
+Distributed Inference to Epidemics and Beyond},
+PhD dissertation, Carnegie Mellon University, Pittsburgh, PA, August 2024.
+
+\bibitem{eschenauerGligor2002}
+L.~Eschenauer and V.~D.~Gligor,
+A key-management scheme for distributed sensor networks,
+in: \emph{Proceedings of the 9th ACM Conference on Computer and Communications
+Security (CCS)}, 2002, pp.~41--47.
+
+\end{thebibliography}
+
+\end{document}

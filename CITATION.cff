@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Exact expected subgraph counts in the random k-out graph: closed forms, a matched-density Erdős–Rényi contrast, and an orientation invariant"
+authors:
+  - family-names: Pardeshi
+    given-names: Rajveersinh Vishal
+    affiliation: Independent Researcher
+last-released: 2026-10-18
+version: v1.0.0
+type: article
+abstract: >-
+  In the symmetrized random k-out graph each vertex independently selects a
+  k-subset of the other n-1 vertices. We give an exact closed formula for the
+  expected number of copies of any fixed graph H for all finite (n, k), compute
+  triangles, stars and a matched-density Erdős–Rényi contrast exactly, and
+  prove a general orientation-invariant constant Omega_k(H) governing all
+  fixed-H first moments. Distributional claims beyond two moments are not made.
+keywords:
+  - random k-out graph
+  - subgraph counts
+  - triangles
+  - clustering
+  - stars
+  - orientation invariant
+  - exact formulae
+license: "CC-BY-4.0"

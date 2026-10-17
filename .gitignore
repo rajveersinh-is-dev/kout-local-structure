@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# LaTeX / Tectonic intermediates
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+
+# OS noise
+Thumbs.db
+.DS_Store
