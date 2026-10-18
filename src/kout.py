@@ -9,16 +9,19 @@ Main object: exact expected number of copies of a fixed finite simple graph H.
 """
 from __future__ import annotations
 
-import itertools
-from dataclasses import dataclass
+from fractions import Fraction  # noqa: E402
 from math import comb, factorial
+import itertools
 
 import numpy as np
+
+
 
 
 # ---------------------------------------------------------------------------
 # Model primitives
 # ---------------------------------------------------------------------------
+
 
 def _subset_bitmasks(m: int, k: int) -> np.ndarray:
     """All k-subsets of {0,...,m-1} encoded as integer bitmasks (ascending)."""
@@ -133,6 +136,7 @@ def count_subgraphs_enum_expectation(n: int, k: int,
 # Theorem 1: exact expected number of copies of a fixed graph H
 # ---------------------------------------------------------------------------
 
+
 def falling(n: int, m: int) -> int:
     """Falling factorial (n)_m = n!/(n-m)!; 0 when m > n."""
     if m > n:
@@ -182,6 +186,7 @@ def expected_unlabeled_copies(n: int, k: int, h_edges: tuple[tuple[int, int], ..
 # ---------------------------------------------------------------------------
 # Closed forms
 # ---------------------------------------------------------------------------
+
 
 def p_triangle_closed(n: int, k: int) -> float:
     """Theorem 2 closed form: P(fixed triple is a triangle).
@@ -238,7 +243,6 @@ def er_comparison_limit(k: int) -> float:
 # Exact rational (Fraction) variants — independent arithmetic path
 # ---------------------------------------------------------------------------
 
-from fractions import Fraction  # noqa: E402
 
 
 def p_H_exact(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
@@ -272,6 +276,16 @@ def p_triangle_exact(n: int, k: int) -> Fraction:
 
 
 def p_C4_exact(n: int, k: int) -> Fraction:
+    """P C4 exact.
+    
+    Args:
+        n:
+        k:
+    
+    Returns:
+        The computed result
+    
+    """
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     B = Fraction(comb(n - 3, k), comb(n - 1, k)) if n - 3 >= k else Fraction(0)
     return (1 - 4 * A * A + 4 * A * A * B + 2 * A ** 4
@@ -279,6 +293,17 @@ def p_C4_exact(n: int, k: int) -> Fraction:
 
 
 def p_star_exact(n: int, k: int, m: int) -> Fraction:
+    """P star exact.
+    
+    Args:
+        n:
+        k:
+        m:
+    
+    Returns:
+        The computed result
+    
+    """
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     total = Fraction(0)
     for j in range(m + 1):
@@ -288,6 +313,16 @@ def p_star_exact(n: int, k: int, m: int) -> Fraction:
 
 
 def expected_edges_exact(n: int, k: int) -> Fraction:
+    """Expected edges exact.
+    
+    Args:
+        n:
+        k:
+    
+    Returns:
+        The computed result
+    
+    """
     p = Fraction(k, n - 1)
     return Fraction(comb(n, 2), 1) * (2 * p - p * p)
 
@@ -363,6 +398,7 @@ def triangle_moments_enum_full(n: int, k: int) -> tuple[float, float, float]:
 # Verification by exact enumeration
 # ---------------------------------------------------------------------------
 
+
 def p_triangle_enum_triple(n: int, k: int) -> float:
     """P(fixed triple forms a triangle) by exact enumeration of the three
     choosers' k-subset choices restricted to the relevant two targets each."""
@@ -412,6 +448,17 @@ def expected_triangles_enum_triple(n: int, k: int) -> float:
     masks_c = _ksubset_masks_excluding(n, k, c0)
 
     def states(masks: np.ndarray, t1: int, t2: int) -> np.ndarray:
+        """States.
+        
+        Args:
+            masks:
+            t1:
+            t2:
+        
+        Returns:
+            The computed result
+        
+        """
         return np.array([((int(m) >> t1) & 1) | (((int(m) >> t2) & 1) << 1)
                          for m in masks], dtype=np.int64)
 
@@ -436,6 +483,7 @@ def expected_triangles_enum_triple(n: int, k: int) -> float:
 # ---------------------------------------------------------------------------
 # Monte Carlo
 # ---------------------------------------------------------------------------
+
 
 def simulate_kout(n: int, k: int, reps: int, seed: int = 0) -> np.ndarray:
     """Monte Carlo sampling of triangle counts in G(n, k-out).
