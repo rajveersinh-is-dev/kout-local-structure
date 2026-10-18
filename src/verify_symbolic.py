@@ -17,9 +17,11 @@ Checks, with sympy (exact rational algebra):
 
 Run:  python src/verify_symbolic.py
 """
+from fractions import Fraction
 from math import comb
 
 import sympy as sp
+
 
 n, k, t = sp.symbols('n k t', positive=True)
 
@@ -30,7 +32,18 @@ n, k, t = sp.symbols('n k t', positive=True)
 # n-1-d >= k, and both sides vanish when n-1-d < k and d >= 1 ... (the
 # product formula is used only where the combinatorial value is nonzero).
 # ---------------------------------------------------------------------------
+
+
 def f(d):
+    """F.
+    
+    Args:
+        d:
+    
+    Returns:
+        The computed result
+    
+    """
     if d == 0:
         return sp.Integer(1)
     num = sp.Integer(1)
@@ -51,6 +64,14 @@ FAIL = []
 
 
 def check(name, expr_a, expr_b):
+    """Check whether the condition holds.
+    
+    Args:
+        name:
+        expr_a:
+        expr_b:
+    
+    """
     diff = sp.cancel(sp.expand(expr_a - expr_b))
     ok = diff == 0
     (PASS if ok else FAIL).append(name)
@@ -62,7 +83,19 @@ def check(name, expr_a, expr_b):
 # ---------------------------------------------------------------------------
 # Theorem 1 subset sum for a graph H given as an edge list on {0..v-1}
 # ---------------------------------------------------------------------------
+
+
 def theorem1_expr(h_edges, h_vertices):
+    """Theorem1 expr.
+    
+    Args:
+        h_edges (list):
+        h_vertices:
+    
+    Returns:
+        The computed result
+    
+    """
     total = sp.Integer(0)
     for r in range(len(h_edges) + 1):
         for F in sp.utilities.iterables.combinations(h_edges, r):
@@ -109,6 +142,8 @@ check("P(C4) = 2/(n-1)^4 for k=1", p_c4_k1, 2 / (n - 1) ** 4)
 # ---------------------------------------------------------------------------
 # (4) asymptotics: substitute n = 1/t and series-expand
 # ---------------------------------------------------------------------------
+
+
 def series_coeffs(expr_in_n, order):
     """Series of expr(n) in t = 1/n up to t^order; returns list of coeffs."""
     expr_t = sp.cancel(sp.together(expr_in_n).subs(n, 1 / t))
@@ -241,12 +276,33 @@ if FAIL:
 #     Machine-verified instances: triangle, C4, stars K_{1,m} (m=2..6),
 #     plus the labeled/unlabeled cross-checks with the series limits.
 # ---------------------------------------------------------------------------
+
+
 def falling_k(t):
     # (k)_t as a sympy polynomial in k; (k)_0 = 1
+    """Falling k.
+    
+    Args:
+        t:
+    
+    Returns:
+        The computed result
+    
+    """
     return sp.prod(k - i for i in range(t))  # t = 0 gives sp.Integer(1)
 
 
 def omega_k(h_edges, h_vertices):
+    """Omega k.
+    
+    Args:
+        h_edges (list):
+        h_vertices:
+    
+    Returns:
+        The computed result
+    
+    """
     total = sp.Integer(0)
     e = len(h_edges)
     for mask in range(2 ** e):
@@ -290,7 +346,6 @@ if FAIL:
 #     Python's math.comb (no sympy): confirm the truncated asymptotic series
 #     reproduces E[#H] for moderately large n to within the next-term size.
 # ---------------------------------------------------------------------------
-from fractions import Fraction
 
 
 def E_tri_exact(N, kk):
@@ -302,6 +357,16 @@ def E_tri_exact(N, kk):
 
 
 def E_c4_exact(N, kk):
+    """E c4 exact.
+    
+    Args:
+        N:
+        kk:
+    
+    Returns:
+        The computed result
+    
+    """
     An = Fraction(comb(N - 2, kk), comb(N - 1, kk))
     Bn = Fraction(comb(N - 3, kk), comb(N - 1, kk)) if N - 3 >= kk else Fraction(0)
     P = (1 - 4 * An ** 2 + 4 * An ** 2 * Bn + 2 * An ** 4
