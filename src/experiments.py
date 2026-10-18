@@ -29,6 +29,14 @@ STAR_M3 = ((0, 1), (0, 2), (0, 3))
 
 
 def write_csv(name, header, rows):
+    """Save csv to file.
+    
+    Args:
+        name:
+        header:
+        rows (list):
+    
+    """
     path = os.path.join(RESULTS, name)
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
@@ -38,18 +46,39 @@ def write_csv(name, header, rows):
 
 
 def t0():
+    """T0.
+    
+    Returns:
+        The computed result
+    
+    """
     return time.perf_counter()
 
 
 # ---------------------------------------------------------------------------
 # 1. Exhaustive-enumeration validation (Theorem 1 vs brute force)
 # ---------------------------------------------------------------------------
+
+
 def exp_validation():
+    """Exp validation.
+    
+    """
     print("[1] exhaustive-enumeration validation")
     start = t0()
     rows = []
 
     def add(case, n, k, formula, enumv):
+        """Add.
+        
+        Args:
+            case:
+            n:
+            k:
+            formula:
+            enumv:
+        
+        """
         rows.append([case, n, k, repr(formula), f"{float(formula):.12f}",
                      f"{float(enumv):.12f}", f"{abs(float(formula)-float(enumv)):.3e}"])
 
@@ -94,7 +123,12 @@ def exp_validation():
 # ---------------------------------------------------------------------------
 # 2. Exact expectation tables
 # ---------------------------------------------------------------------------
+
+
 def exp_expectations():
+    """Exp expectations.
+    
+    """
     print("[2] exact expectation tables")
     start = t0()
     rows = []
@@ -128,6 +162,9 @@ V1_COEF = lambda k: -k ** 2 * (16 * k ** 2 - 21 * k + 7) / 2  # Var correction
 
 
 def exp_asymptotics():
+    """Exp asymptotics.
+    
+    """
     print("[3] asymptotic convergence")
     start = t0()
     rows = []
@@ -150,7 +187,12 @@ def exp_asymptotics():
 # ---------------------------------------------------------------------------
 # 4. Monte Carlo validation
 # ---------------------------------------------------------------------------
+
+
 def exp_monte_carlo():
+    """Exp monte carlo.
+    
+    """
     print("[4] Monte Carlo validation")
     start = t0()
     rows = []
@@ -188,6 +230,9 @@ STAR_C = {   # first nonzero series coefficient of P(K_{1,m}), from sympy
 
 
 def exp_stars():
+    """Exp stars.
+    
+    """
     print("[5] star cancellation")
     start = t0()
     import math as _m
@@ -209,7 +254,12 @@ def exp_stars():
 # ---------------------------------------------------------------------------
 # 6. Variance table
 # ---------------------------------------------------------------------------
+
+
 def exp_variance():
+    """Exp variance.
+    
+    """
     print("[6] variance table")
     start = t0()
     rows = []
