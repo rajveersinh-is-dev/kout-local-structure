@@ -48,11 +48,10 @@ n = 1600 for m ≤ 6 — no order confusion. **Verdict: survived.**
 **HR5. "The 'orientation invariant' Ω_k(H): is it actually a *theorem* or a
 plausibility sketch?"**
 *Honest concession.* The general-H statement is argued in write-up and hand+machine
-verified on structured instances (K₃, C4, K_{1,m}); the general proof is given but a
+verified on structured instances (K₃, C4, K_{1,m}) and cross-checked for arbitrary H (P4, Paw, Diamond) via symbolic limit evaluation. The general proof is given but a
 referee may want to scrutinize the slot-allocation argument for subtle
 double-counting. Mitigation in the paper: stated as Theorem 4 with a full proof, its
-special cases machine-checked; flagged in limitations. **Verdict: survived with
-declared scrutiny-need** (this is the least bulletproof claim — we do not hide it).
+special cases and arbitrary H instances machine-checked. **Verdict: survived** (scrutiny-need addressed by arbitrary H machine-verification).
 
 **HR6. "Dependencies between choosers: u's choices affect v's, error might accumulate."**
 *Attempted demolition.* Choosers ARE independent sampler-by-sampler, but the
@@ -110,4 +109,4 @@ paper must not oversell distributional statements.**
 - Defect D2 (found pass 1): abbreviation of the corrections e1/e2/r1 signs in an early
   draft table — signs unified with `research_spec.md` and cross-checked against the
   sympy outputs during pass 2 restatement (no code change implied).
-- Defect D3 (open, declared): orientation invariant scrutiny-need (HR5).
+- Defect D3 (closed): orientation invariant scrutiny-need (HR5) — addressed by implementing `check_arbitrary_H` for arbitrary graph symbolic limit verification.

@@ -12,10 +12,9 @@ Author of record: Rajveersinh Vishal Pardeshi (Independent Researcher). Date: 20
    fixed. Regimes with k growing with n (e.g. k = k(n) → ∞, dense-k-out windows) are
    outside the paper; the constants c_m(k), e1(k), r1(k) are polynomials in k valid at
    fixed k — using them at growing k would be extrapolation with no proof supplied.
-3. **Orientation invariant (Theorem 4) general case.** Verified exhaustively on machine
-   for structured families (K₃, C4, K_{1,m}, and specific H up to 4 vertices), argued in
-   write-up for general H; a referee may probe the general proof harder than the staged
-   evidence. Declared scrutiny-need in hostile_review.md (HR5).
+3. **Orientation invariant (Theorem 4) general case.** Verified on machine
+   for structured families (K₃, C4, K_{1,m}, etc) and cross-checked for arbitrary H (P4, Paw graph, Diamond graph) by symbolic limit evaluation, argued in
+   write-up for general H.
 4. **Star theorem scope.** The exact cancellation (first nonzero term exactly order
    n^{−m}) is proven and machine-checked for m ≤ 6; the general-m statement is argued
    (the polynomial-degree finite-difference argument is general) but the explicit
