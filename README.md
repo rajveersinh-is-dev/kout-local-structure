@@ -47,7 +47,7 @@ asymptotically for fixed `H`, fixed `k`?
 ## Verification status (as generated 2026-10-18)
 
 - **Unit tests:** `pytest` 43/43 pass (`tests/test_kout.py`).
-- **Symbolic checks:** `src/verify_symbolic.py` — 36/36 exact identities pass
+- **Symbolic checks:** `src/verify_symbolic.py` — 39/39 exact identities pass
   (sympy, incl. orientation-invariant instances and exact-Fraction asymptotic
   spot checks with truncation bounds).
 - **Exhaustive enumeration:** 25 staged small-`n` cases enumerate **all** choice
@@ -61,7 +61,7 @@ asymptotically for fixed `H`, fixed `k`?
 ```bash
 pip install -r requirements.txt   # numpy 2.4.6, sympy 1.14.0, pytest 9.1.1
 python src/experiments.py         # regenerates every CSV in results/ (seeded MC)
-python src/verify_symbolic.py     # 36 symbolic checks
+python src/verify_symbolic.py     # 39 symbolic checks
 python -m pytest -q               # 43 tests
 ```
 
@@ -76,7 +76,7 @@ LaTeX toolchain works).
 | Path | Contents |
 |---|---|
 | `paper/` | manuscript (`main.tex`, `references.bib`) and compiled `main.pdf` |
-| `src/` | `kout.py` (formulae, closed forms, exact-Fraction paths, enumeration, MC), `experiments.py` (regenerates every CSV), `verify_symbolic.py` (36 checks) |
+| `src/` | `kout.py` (formulae, closed forms, exact-Fraction paths, enumeration, MC), `experiments.py` (regenerates every CSV), `verify_symbolic.py` (39 checks) |
 | `tests/` | pytest suite (43 tests) |
 | `results/` | 7 CSV files + `summary.md`; **every number in the paper's tables comes from these files** |
 | `research/` | research-process documents: literature review, evidence ledger (claim → evidence map, residual risks R1–R5), novelty assessment, two hostile-review passes, limitations, journal-selection record |
@@ -99,8 +99,7 @@ See `research/limitations.md` and the Limitations section of the manuscript:
 (a) distributional results are first/second-moment only (Poisson limit is a
 conjecture); (b) fixed-`k`, fixed-`H` regimes only; (c) star constants tabulated
 for `m ≤ 6` while the general-`m` formula is proven; (d) the orientation-invariant
-implementation checks cover structured families (`K3`, `C4`, stars, `K4−e`), not
-an arbitrary-`H` cross-check; (e) the novelty statement is a negative claim from a
+implementation checks cover structured families (`K3`, `C4`, stars, `K4−e`) and arbitrary graphs (`P4`, Paw, Diamond); (e) the novelty statement is a negative claim from a
 targeted literature search, not a proof of no-overlap — residual risks R1–R5 are
 recorded in `research/evidence_ledger.md`.
 

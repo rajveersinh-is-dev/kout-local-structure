@@ -793,7 +793,7 @@ contains the source code, the generated data, and
 the verification documents. The repository's verification stack:
 
 \begin{enumerate}
-\item \textbf{Symbolic}: \texttt{src/verify\_symbolic.py} — 36 machine-verified
+\item \textbf{Symbolic}: \texttt{src/verify\_symbolic.py} — 39 machine-verified
 identities over exact rational algebra (sympy), including Theorem~\ref{thm:general}
 vs.\ closed forms for triangles/$C_4$/stars ($m\le6$), the identity
 \eqref{eq:triident}, $B=AC$, the $k=1$ specials of Corollary~\ref{cor:k1}, the
@@ -823,7 +823,7 @@ candidate scoring, literature review, evidence ledger, novelty assessment, hosti
 review, limitations, journal selection); and \texttt{paper/} (this manuscript and
 its bibliography). Running \texttt{python src/experiments.py} regenerates every
 CSV from scratch (Monte Carlo seeded); running \texttt{python} with the script
-\texttt{src/verify\_symbolic.py} re-runs the 36 symbolic checks;
+\texttt{src/verify\_symbolic.py} re-runs the 39 symbolic checks;
 \texttt{pytest} re-runs the 43 tests. Software: Python 3.14 with numpy, sympy (exact arithmetic), pytest.
 No proprietary data are used; the literature checks cite publicly retrievable
 sources with their access dates.
@@ -879,8 +879,7 @@ constants are explicit polynomials up to $m=6$ (tabulated); the general
 formula $\sum_j\binom{m}{j}(k)_j k^{m-j}$ is proven via
 Theorem~\ref{thm:omega} for all $m$. (4) The orientation-invariant proof is
 complete, but its instance checks in the repository cover structured families
-($K_3$, $C_4$, stars, $K_4-e$); a general-implementation cross-check for arbitrary
-$H$ was not built in-session. (5) The novelty statement
+($K_3$, $C_4$, stars, $K_4-e$) and arbitrary graphs via symbolic limits. (5) The novelty statement
 (Section~\ref{sec:repro}) is a negative claim from a targeted search (documents in
 the repository), not a proof of no-overlap: residual risks are recorded in the
 evidence ledger.

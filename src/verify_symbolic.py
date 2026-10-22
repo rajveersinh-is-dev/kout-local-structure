@@ -280,6 +280,33 @@ for m in (2, 3, 4, 5, 6):
     check(f"Omega(K_1,{m}) == sum_j C(m,j)(k)_j k^(m-j)",
           omega_k(star, m + 1), sp.cancel(expected))
 
+
+def check_arbitrary_H(name, h_edges, h_vertices):
+    P_H = theorem1_expr(h_edges, h_vertices)
+    E_N_H = P_H
+    for i in range(h_vertices):
+        E_N_H *= (n - i)
+    e = len(h_edges)
+    v = h_vertices
+
+    expr_t = sp.cancel(sp.together(E_N_H / n**(v - e)).subs(n, 1/t))
+
+    s = sp.series(expr_t, t, 0, 1).removeO()
+    limit_val = sp.simplify(s.subs(t, 0))
+
+    omega_val = omega_k(h_edges, h_vertices)
+
+    diff = sp.simplify(limit_val - omega_val)
+    ok = diff == 0
+    (PASS if ok else FAIL).append(name)
+    print(f"[{'PASS' if ok else 'FAIL'}] {name}")
+    if not ok:
+        print("   diff =", diff)
+
+check_arbitrary_H("Omega arbitrary P4 (3-edge path)", ((0, 1), (1, 2), (2, 3)), 4)
+check_arbitrary_H("Omega arbitrary Paw graph", ((0, 1), (0, 2), (0, 3), (1, 2)), 4)
+check_arbitrary_H("Omega arbitrary Diamond graph", ((0, 1), (1, 2), (2, 3), (3, 0), (0, 2)), 4)
+
 print(f"\n===== FINAL: {len(PASS)} passed, {len(FAIL)} failed =====")
 if FAIL:
     raise SystemExit(1)
