@@ -62,19 +62,26 @@ def check(name, expr_a, expr_b):
 # ---------------------------------------------------------------------------
 # Theorem 1 subset sum for a graph H given as an edge list on {0..v-1}
 # ---------------------------------------------------------------------------
+import collections
+
 def theorem1_expr(h_edges, h_vertices):
-    total = sp.Integer(0)
+    deg_counts = collections.defaultdict(int)
     for r in range(len(h_edges) + 1):
         for F in sp.utilities.iterables.combinations(h_edges, r):
             deg = [0] * h_vertices
             for u, w in F:
                 deg[u] += 1
                 deg[w] += 1
-            term = (-1) ** r
-            for u in range(h_vertices):
-                term = term * f(deg[u])
-            total += term
-    return sp.cancel(total)
+            deg_counts[tuple(sorted(deg))] += (-1) ** r
+
+    total = sp.Integer(0)
+    for deg, coeff in deg_counts.items():
+        if coeff == 0: continue
+        term = sp.Integer(coeff)
+        for d in deg:
+            term = term * f(d)
+        total = sp.cancel(total + term)
+    return total
 
 
 TRIANGLE = ((0, 1), (1, 2), (2, 0))
@@ -221,7 +228,8 @@ N1 = n * (n - 1) * (n - 2) / 2 * (n - 3) * (n - 4) / 2
 Nd = N0 * (n - 3) * (n - 4) * (n - 5) / 6
 E2 = sp.expand(N0 * P3s + N2 * PK4e + N1 * Pbow + Nd * P2t)
 E1 = sp.expand(N0 * P3s)
-VarT = sp.cancel(E2 - E1 ** 2)
+E1_sq = sp.cancel(E1 ** 2)
+VarT = sp.cancel(E2 - E1_sq)
 c_var = series_coeffs(VarT, 2)
 print("\nVar(T) = v0 + v1/n + v2/n^2 + ...")
 for i, c in enumerate(c_var):
