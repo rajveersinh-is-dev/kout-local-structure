@@ -158,3 +158,80 @@ def test_second_moment_vs_monte_carlo(n, k):
     se_v = var_s * np.sqrt(2.0 / (reps - 1))     # normal approx for Var SE
     assert abs(samples.mean() - e1) < 5.0 * se_m + 1e-12, (n, k)
     assert abs(var_s - v) < 5.0 * se_v + 1e-12, (n, k, var_s, v, se_v)
+import pytest
+from fractions import Fraction
+import numpy as np
+
+def test_subset_bitmasks():
+    masks = K._subset_bitmasks(3, 2)
+    assert len(masks) == 3
+
+def test_count_subgraphs_adj():
+    adj = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=bool)
+    assert K.count_subgraphs_adj(adj, ((0, 1), (1, 2), (0, 2))) == 6
+    assert K.count_subgraphs_adj(np.array([[0, 1], [1, 0]], dtype=bool), ((0, 1), (1, 2), (0, 2))) == 0
+
+def test_falling():
+    assert K.falling(3, 4) == 0
+    assert K.falling(3, 3) == 6
+
+def test_p_H_in_kout_exceptions():
+    with pytest.raises(ValueError):
+        K.p_H_in_kout(3, 4, ((0, 1),), 2)
+    assert K.p_H_in_kout(3, 1, ((0, 1),), 4) == 0.0
+
+def test_count_subgraphs_enum_expectation_exceptions():
+    with pytest.raises(ValueError):
+        K.count_subgraphs_enum_expectation(3, 4, ((0, 1),), 2, 1)
+    assert K.count_subgraphs_enum_expectation(3, 1, ((0, 1),), 4, 1) == 0.0
+
+def test_p_H_exact_exceptions():
+    with pytest.raises(ValueError):
+        K.p_H_exact(3, 4, ((0, 1),), 2)
+    assert K.p_H_exact(3, 1, ((0, 1),), 4) == Fraction(0)
+
+def test_simulate_kout():
+    res = K.simulate_kout(4, 1, 5)
+    assert len(res) == 5
+
+def test_frac_funcs():
+    assert K.p_triangle_exact(5, 2) == Fraction(10, 27)
+    assert K.p_C4_exact(5, 2) == Fraction(343, 1296)
+    assert K.p_star_exact(5, 2, 2) == Fraction(13, 24)
+    assert K.expected_edges_exact(5, 2) == Fraction(15, 2)
+    assert K.triangle_moments_exact_frac(5, 2) == (Fraction(395, 24), Fraction(100, 27), Fraction(15985, 5832))
+
+def test_p_triangle_enum_triple():
+    assert abs(K.p_triangle_enum_triple(5, 2) - K.p_triangle_closed(5, 2)) < 1e-9
+
+def test_expected_triangles_enum_full():
+    assert K.expected_triangles_enum_full(5, 2) > 0
+
+def test_count_subgraphs_enum_expectation():
+    assert K.count_subgraphs_enum_expectation(4, 1, ((0, 1),), 2, 1) > 0
+
+def test_expected_unlabeled_copies():
+    assert K.expected_unlabeled_copies(4, 1, ((0, 1),), 2, 1) > 0
+    assert K.expected_labeled_copies(4, 1, ((0, 1),), 2) > 0
+
+def test_expected_edges_exact():
+    assert K.expected_edges_exact(5, 2) == Fraction(15, 2)
+
+
+def test_closed_funcs_exceptions():
+    with pytest.raises(ValueError):
+        K.p_triangle_closed(3, 4)
+    with pytest.raises(ValueError):
+        K.p_C4_closed(3, 4)
+    with pytest.raises(ValueError):
+        K.p_star_closed(3, 4, 2)
+    with pytest.raises(ValueError):
+        K.expected_edges_closed(3, 4)
+    with pytest.raises(ValueError):
+        K.p_triangle_exact(3, 4)
+    with pytest.raises(ValueError):
+        K.p_C4_exact(3, 4)
+    with pytest.raises(ValueError):
+        K.p_star_exact(3, 4, 2)
+    with pytest.raises(ValueError):
+        K.expected_edges_exact(3, 4)

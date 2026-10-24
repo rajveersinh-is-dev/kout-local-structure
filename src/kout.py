@@ -189,6 +189,8 @@ def p_triangle_closed(n: int, k: int) -> float:
     With A = C(n-2,k)/C(n-1,k) and B = C(n-3,k)/C(n-1,k):
         P = 1 - 3 A^2 + 3 A^2 B - B^3.
     """
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = comb(n - 2, k) / comb(n - 1, k)
     B = comb(n - 3, k) / comb(n - 1, k) if n - 3 >= k else 0.0
     return 1.0 - 3.0 * A * A + 3.0 * A * A * B - B ** 3
@@ -199,6 +201,8 @@ def p_C4_closed(n: int, k: int) -> float:
     P = 1 - 4 A^2 + 4 A^2 B + 2 A^4 - 4 A^2 B^2 + B^4,
     A = C(n-2,k)/C(n-1,k), B = C(n-3,k)/C(n-1,k).
     """
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = comb(n - 2, k) / comb(n - 1, k)
     B = comb(n - 3, k) / comb(n - 1, k) if n - 3 >= k else 0.0
     return (1.0 - 4.0 * A * A + 4.0 * A * A * B + 2.0 * A ** 4
@@ -209,6 +213,8 @@ def p_star_closed(n: int, k: int, m: int) -> float:
     """Closed form for the star K_{1,m} centered at the first vertex:
     P = sum_{j=0}^{m} (-1)^j C(m, j) C(n-1-j, k) [C(n-2,k)/C(n-1,k)]^j / C(n-1,k).
     """
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = comb(n - 2, k) / comb(n - 1, k)
     total = 0.0
     for j in range(m + 1):
@@ -219,6 +225,8 @@ def p_star_closed(n: int, k: int, m: int) -> float:
 
 def expected_edges_closed(n: int, k: int) -> float:
     """Exact expected number of edges: C(n,2) * (2p - p^2), p = k/(n-1)."""
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     p = k / (n - 1)
     return comb(n, 2) * (2.0 * p - p * p)
 
@@ -266,12 +274,16 @@ def p_H_exact(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
 
 def p_triangle_exact(n: int, k: int) -> Fraction:
     """Theorem 2 closed form as an exact rational number."""
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     B = Fraction(comb(n - 3, k), comb(n - 1, k)) if n - 3 >= k else Fraction(0)
     return 1 - 3 * A * A + 3 * A * A * B - B ** 3
 
 
 def p_C4_exact(n: int, k: int) -> Fraction:
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     B = Fraction(comb(n - 3, k), comb(n - 1, k)) if n - 3 >= k else Fraction(0)
     return (1 - 4 * A * A + 4 * A * A * B + 2 * A ** 4
@@ -279,6 +291,8 @@ def p_C4_exact(n: int, k: int) -> Fraction:
 
 
 def p_star_exact(n: int, k: int, m: int) -> Fraction:
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     total = Fraction(0)
     for j in range(m + 1):
@@ -288,6 +302,8 @@ def p_star_exact(n: int, k: int, m: int) -> Fraction:
 
 
 def expected_edges_exact(n: int, k: int) -> Fraction:
+    if k > n - 1:
+        raise ValueError("k must be at most n-1")
     p = Fraction(k, n - 1)
     return Fraction(comb(n, 2), 1) * (2 * p - p * p)
 
