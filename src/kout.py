@@ -7,18 +7,19 @@ G(n,k-out) has edge {u,v} iff u chose v or v chose u.
 
 Main object: exact expected number of copies of a fixed finite simple graph H.
 """
+
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass
+from fractions import Fraction
 from math import comb, factorial
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Model primitives
 # ---------------------------------------------------------------------------
+
 
 def _subset_bitmasks(m: int, k: int) -> np.ndarray:
     """All k-subsets of {0,...,m-1} encoded as integer bitmasks (ascending)."""
@@ -56,11 +57,11 @@ def _drop_self_targets(perm: np.ndarray, k: int) -> np.ndarray:
     random permutation.
     """
     R, n = perm.shape
-    part = perm[:, : k + 1]                       # (R, k+1)
-    v = np.tile(np.arange(n), R // n)[:, None]    # row vertex labels
+    part = perm[:, : k + 1]  # (R, k+1)
+    v = np.tile(np.arange(n), R // n)[:, None]  # row vertex labels
     cols = np.arange(k + 1)[None, :]
-    rank = np.where(part != v, cols, k + 1)       # column rank if kept
-    order = np.sort(rank, axis=1)[:, :k]          # columns of the k kept
+    rank = np.where(part != v, cols, k + 1)  # column rank if kept
+    order = np.sort(rank, axis=1)[:, :k]  # columns of the k kept
     return np.take_along_axis(part, order, axis=1)
 
 
@@ -95,9 +96,9 @@ def count_subgraphs_adj(adj: np.ndarray, h_edges: tuple[tuple[int, int], ...]) -
     return count
 
 
-def count_subgraphs_enum_expectation(n: int, k: int,
-                                     h_edges: tuple[tuple[int, int], ...],
-                                     h_vertices: int, aut_size: int) -> float:
+def count_subgraphs_enum_expectation(
+    n: int, k: int, h_edges: tuple[tuple[int, int], ...], h_vertices: int, aut_size: int
+) -> float:
     """E[# unlabeled copies of H] by EXHAUSTIVE enumeration of choice profiles.
 
     Independent of Theorem 1: for every choice profile (there are
@@ -112,16 +113,16 @@ def count_subgraphs_enum_expectation(n: int, k: int,
         return 0.0
     e0 = np.array([u for u, _ in h_edges], dtype=np.int64)
     e1 = np.array([w for _, w in h_edges], dtype=np.int64)
-    embs = np.array(list(itertools.permutations(range(n), h_vertices)),
-                    dtype=np.int64)
-    a_idx = embs[:, e0]          # (M, |E(H)|) source vertices
-    b_idx = embs[:, e1]          # (M, |E(H)|) target vertices
+    embs = np.array(list(itertools.permutations(range(n), h_vertices)), dtype=np.int64)
+    a_idx = embs[:, e0]  # (M, |E(H)|) source vertices
+    b_idx = embs[:, e1]  # (M, |E(H)|) target vertices
     mask_lists = [_ksubset_masks_excluding(n, k, v) for v in range(n)]
     total_labeled = 0
     n_profiles = 0
     for profile in itertools.product(*[range(len(ml)) for ml in mask_lists]):
-        choices = np.array([mask_lists[v][j] for v, j in enumerate(profile)],
-                           dtype=np.int64)
+        choices = np.array(
+            [mask_lists[v][j] for v, j in enumerate(profile)], dtype=np.int64
+        )
         adj = choices_to_adjacency(choices, n)
         ok = adj[a_idx, b_idx].all(axis=1)
         total_labeled += int(ok.sum())
@@ -133,6 +134,7 @@ def count_subgraphs_enum_expectation(n: int, k: int,
 # Theorem 1: exact expected number of copies of a fixed graph H
 # ---------------------------------------------------------------------------
 
+
 def falling(n: int, m: int) -> int:
     """Falling factorial (n)_m = n!/(n-m)!; 0 when m > n."""
     if m > n:
@@ -140,8 +142,9 @@ def falling(n: int, m: int) -> int:
     return factorial(n) // factorial(n - m)
 
 
-def p_H_in_kout(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
-                h_vertices: int) -> float:
+def p_H_in_kout(
+    n: int, k: int, h_edges: tuple[tuple[int, int], ...], h_vertices: int
+) -> float:
     """P(a fixed labeled embedding of H occurs in G(n,k-out)).
 
     Theorem 1:  P = sum_{F subset of E(H)} (-1)^{|F|} * prod_u C(n-1-d_u(F), k)
@@ -164,17 +167,19 @@ def p_H_in_kout(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
                 m = n - 1 - deg[u]
                 term *= comb(m, k) if m >= k else 0
             total += term
-    return total / (denom ** h_vertices)
+    return total / (denom**h_vertices)
 
 
-def expected_labeled_copies(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
-                            h_vertices: int) -> float:
+def expected_labeled_copies(
+    n: int, k: int, h_edges: tuple[tuple[int, int], ...], h_vertices: int
+) -> float:
     """Exact E[# labeled copies of H] in G(n, k-out)."""
     return falling(n, h_vertices) * p_H_in_kout(n, k, h_edges, h_vertices)
 
 
-def expected_unlabeled_copies(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
-                              h_vertices: int, aut_size: int) -> float:
+def expected_unlabeled_copies(
+    n: int, k: int, h_edges: tuple[tuple[int, int], ...], h_vertices: int, aut_size: int
+) -> float:
     """E[# unlabeled copies of H] = E[# labeled copies] / |Aut(H)|."""
     return expected_labeled_copies(n, k, h_edges, h_vertices) / aut_size
 
@@ -182,6 +187,7 @@ def expected_unlabeled_copies(n: int, k: int, h_edges: tuple[tuple[int, int], ..
 # ---------------------------------------------------------------------------
 # Closed forms
 # ---------------------------------------------------------------------------
+
 
 def p_triangle_closed(n: int, k: int) -> float:
     """Theorem 2 closed form: P(fixed triple is a triangle).
@@ -193,7 +199,7 @@ def p_triangle_closed(n: int, k: int) -> float:
         raise ValueError("k must be at most n-1")
     A = comb(n - 2, k) / comb(n - 1, k)
     B = comb(n - 3, k) / comb(n - 1, k) if n - 3 >= k else 0.0
-    return 1.0 - 3.0 * A * A + 3.0 * A * A * B - B ** 3
+    return 1.0 - 3.0 * A * A + 3.0 * A * A * B - B**3
 
 
 def p_C4_closed(n: int, k: int) -> float:
@@ -205,8 +211,7 @@ def p_C4_closed(n: int, k: int) -> float:
         raise ValueError("k must be at most n-1")
     A = comb(n - 2, k) / comb(n - 1, k)
     B = comb(n - 3, k) / comb(n - 1, k) if n - 3 >= k else 0.0
-    return (1.0 - 4.0 * A * A + 4.0 * A * A * B + 2.0 * A ** 4
-            - 4.0 * A * A * B * B + B ** 4)
+    return 1.0 - 4.0 * A * A + 4.0 * A * A * B + 2.0 * A**4 - 4.0 * A * A * B * B + B**4
 
 
 def p_star_closed(n: int, k: int, m: int) -> float:
@@ -219,7 +224,7 @@ def p_star_closed(n: int, k: int, m: int) -> float:
     total = 0.0
     for j in range(m + 1):
         cval = comb(n - 1 - j, k) if n - 1 - j >= k else 0
-        total += ((-1) ** j) * comb(m, j) * cval * (A ** j)
+        total += ((-1) ** j) * comb(m, j) * cval * (A**j)
     return total / comb(n - 1, k)
 
 
@@ -233,7 +238,7 @@ def expected_edges_closed(n: int, k: int) -> float:
 
 def asymptotic_triangle_constant(k: int) -> float:
     """lim_{n->inf} E[#triangles] = (4k^3 - 3k^2)/3."""
-    return (4.0 * k ** 3 - 3.0 * k ** 2) / 3.0
+    return (4.0 * k**3 - 3.0 * k**2) / 3.0
 
 
 def er_comparison_limit(k: int) -> float:
@@ -246,11 +251,10 @@ def er_comparison_limit(k: int) -> float:
 # Exact rational (Fraction) variants — independent arithmetic path
 # ---------------------------------------------------------------------------
 
-from fractions import Fraction  # noqa: E402
 
-
-def p_H_exact(n: int, k: int, h_edges: tuple[tuple[int, int], ...],
-              h_vertices: int) -> Fraction:
+def p_H_exact(
+    n: int, k: int, h_edges: tuple[tuple[int, int], ...], h_vertices: int
+) -> Fraction:
     """Theorem 1 as an exact rational number (integer binomials only)."""
     if k > n - 1:
         raise ValueError("k must be at most n-1")
@@ -278,7 +282,7 @@ def p_triangle_exact(n: int, k: int) -> Fraction:
         raise ValueError("k must be at most n-1")
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     B = Fraction(comb(n - 3, k), comb(n - 1, k)) if n - 3 >= k else Fraction(0)
-    return 1 - 3 * A * A + 3 * A * A * B - B ** 3
+    return 1 - 3 * A * A + 3 * A * A * B - B**3
 
 
 def p_C4_exact(n: int, k: int) -> Fraction:
@@ -286,8 +290,7 @@ def p_C4_exact(n: int, k: int) -> Fraction:
         raise ValueError("k must be at most n-1")
     A = Fraction(comb(n - 2, k), comb(n - 1, k))
     B = Fraction(comb(n - 3, k), comb(n - 1, k)) if n - 3 >= k else Fraction(0)
-    return (1 - 4 * A * A + 4 * A * A * B + 2 * A ** 4
-            - 4 * A * A * B * B + B ** 4)
+    return 1 - 4 * A * A + 4 * A * A * B + 2 * A**4 - 4 * A * A * B * B + B**4
 
 
 def p_star_exact(n: int, k: int, m: int) -> Fraction:
@@ -297,7 +300,7 @@ def p_star_exact(n: int, k: int, m: int) -> Fraction:
     total = Fraction(0)
     for j in range(m + 1):
         cval = Fraction(comb(n - 1 - j, k), 1) if n - 1 - j >= k else Fraction(0)
-        total += ((-1) ** j) * comb(m, j) * cval * (A ** j)
+        total += ((-1) ** j) * comb(m, j) * cval * (A**j)
     return total / Fraction(comb(n - 1, k), 1)
 
 
@@ -308,8 +311,7 @@ def expected_edges_exact(n: int, k: int) -> Fraction:
     return Fraction(comb(n, 2), 1) * (2 * p - p * p)
 
 
-def triangle_moments_exact_frac(n: int, k: int) -> tuple[Fraction, Fraction,
-                                                         Fraction]:
+def triangle_moments_exact_frac(n: int, k: int) -> tuple[Fraction, Fraction, Fraction]:
     """Exact (E[T^2], E[T], Var(T)) as Fractions."""
     P3 = p_triangle_exact(n, k)
     N0 = Fraction(comb(n, 3), 1)
@@ -330,10 +332,9 @@ def triangle_moments_exact_frac(n: int, k: int) -> tuple[Fraction, Fraction,
 
 # Union graphs of two triangles, classified by the overlap of the two
 # (ordered) triples.  For s = t the union is a single triangle.
-K4_MINUS_EDGE = (4, ((0, 1), (0, 2), (1, 2), (0, 3), (1, 3)))   # share an edge
+K4_MINUS_EDGE = (4, ((0, 1), (0, 2), (1, 2), (0, 3), (1, 3)))  # share an edge
 BOWTIE = (5, ((0, 1), (1, 2), (0, 2), (0, 3), (3, 4), (0, 4)))  # share a vertex
-TWO_TRIANGLES = (6, ((0, 1), (1, 2), (0, 2),
-                     (3, 4), (4, 5), (3, 5)))                  # disjoint
+TWO_TRIANGLES = (6, ((0, 1), (1, 2), (0, 2), (3, 4), (4, 5), (3, 5)))  # disjoint
 
 
 def triangle_moments_exact(n: int, k: int) -> tuple[float, float, float]:
@@ -365,8 +366,9 @@ def triangle_moments_enum_full(n: int, k: int) -> tuple[float, float, float]:
     s2 = 0.0
     count = 0
     for profile in itertools.product(*[range(len(ml)) for ml in mask_lists]):
-        choices = np.array([mask_lists[v][j] for v, j in enumerate(profile)],
-                           dtype=np.int64)
+        choices = np.array(
+            [mask_lists[v][j] for v, j in enumerate(profile)], dtype=np.int64
+        )
         adj = choices_to_adjacency(choices, n)
         T = count_triangles_adj(adj)
         s1 += T
@@ -378,6 +380,7 @@ def triangle_moments_enum_full(n: int, k: int) -> tuple[float, float, float]:
 # ---------------------------------------------------------------------------
 # Verification by exact enumeration
 # ---------------------------------------------------------------------------
+
 
 def p_triangle_enum_triple(n: int, k: int) -> float:
     """P(fixed triple forms a triangle) by exact enumeration of the three
@@ -410,8 +413,9 @@ def expected_triangles_enum_full(n: int, k: int) -> float:
     total = 0.0
     count = 0
     for profile in itertools.product(*[range(len(ml)) for ml in mask_lists]):
-        choices = np.array([mask_lists[v][j] for v, j in enumerate(profile)],
-                           dtype=np.int64)
+        choices = np.array(
+            [mask_lists[v][j] for v, j in enumerate(profile)], dtype=np.int64
+        )
         adj = choices_to_adjacency(choices, n)
         total += count_triangles_adj(adj)
         count += 1
@@ -428,8 +432,10 @@ def expected_triangles_enum_triple(n: int, k: int) -> float:
     masks_c = _ksubset_masks_excluding(n, k, c0)
 
     def states(masks: np.ndarray, t1: int, t2: int) -> np.ndarray:
-        return np.array([((int(m) >> t1) & 1) | (((int(m) >> t2) & 1) << 1)
-                         for m in masks], dtype=np.int64)
+        return np.array(
+            [((int(m) >> t1) & 1) | (((int(m) >> t2) & 1) << 1) for m in masks],
+            dtype=np.int64,
+        )
 
     sa_states = states(masks_a, b0, c0)
     sb_states = states(masks_b, a0, c0)
@@ -453,6 +459,7 @@ def expected_triangles_enum_triple(n: int, k: int) -> float:
 # Monte Carlo
 # ---------------------------------------------------------------------------
 
+
 def simulate_kout(n: int, k: int, reps: int, seed: int = 0) -> np.ndarray:
     """Monte Carlo sampling of triangle counts in G(n, k-out).
 
@@ -472,8 +479,9 @@ def simulate_kout(n: int, k: int, reps: int, seed: int = 0) -> np.ndarray:
     return counts
 
 
-def simulate_triangles_fast(n: int, k: int, reps: int, seed: int = 0,
-                            chunk: int = 32) -> np.ndarray:
+def simulate_triangles_fast(
+    n: int, k: int, reps: int, seed: int = 0, chunk: int = 32
+) -> np.ndarray:
     """Vectorized Monte Carlo (batched, float32 BLAS) of triangle counts.
 
     For a batch of replicates the adjacency is built at once, symmetrized,
@@ -490,15 +498,15 @@ def simulate_triangles_fast(n: int, k: int, reps: int, seed: int = 0,
     while done < reps:
         m = min(chunk, reps - done)
         perm = rng.permuted(np.tile(np.arange(n), (n * m, 1)), axis=1)
-        picked = _drop_self_targets(perm, k)       # (n*m, k)
+        picked = _drop_self_targets(perm, k)  # (n*m, k)
         rows = np.tile(np.repeat(np.arange(n), k), m)
         cols = picked.ravel()
         batch = np.zeros((m, n, n), dtype=np.float32)
         rep_idx = np.repeat(np.arange(m), n * k)
         batch[rep_idx, rows, cols] = 1.0
         batch = np.maximum(batch, np.transpose(batch, (0, 2, 1)))  # OR: 0/1
-        common = np.matmul(batch, batch)                 # (m, n, n)
+        common = np.matmul(batch, batch)  # (m, n, n)
         prod = batch[:, iu0, iu1] * common[:, iu0, iu1]
-        counts[done:done + m] = np.rint(prod.sum(axis=1, dtype=np.float64) / 3.0)
+        counts[done : done + m] = np.rint(prod.sum(axis=1, dtype=np.float64) / 3.0)
         done += m
     return counts
