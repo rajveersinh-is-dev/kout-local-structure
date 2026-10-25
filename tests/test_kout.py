@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 """Verification suite for the k-out local-structure theorems.
 
 Cross-checks:
@@ -6,6 +8,7 @@ Cross-checks:
   (c) C4 / star closed forms vs. Theorem 1;
   (d) Monte Carlo consistency for larger n.
 """
+
 import os
 import sys
 
@@ -16,7 +19,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import kout as K  # noqa: E402
 
-
 TRIANGLE = ((0, 1), (1, 2), (2, 0))
 C4 = ((0, 1), (1, 2), (2, 3), (3, 0))
 STAR3 = ((0, 1), (0, 2), (0, 3))
@@ -26,8 +28,10 @@ STAR3 = ((0, 1), (0, 2), (0, 3))
 # (a) Theorem 1 vs full-profile exhaustive enumeration
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("n,k", [(3, 1), (3, 2), (4, 1), (4, 2), (4, 3),
-                                 (5, 1), (5, 2), (5, 3), (5, 4)])
+
+@pytest.mark.parametrize(
+    "n,k", [(3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1), (5, 2), (5, 3), (5, 4)]
+)
 def test_theorem1_triangles_vs_full_enumeration(n, k):
     """E[#triangles] from Theorem 1 must match exhaustive enumeration
     over all (C(n-1,k))^n choice profiles (feasible for these sizes)."""
@@ -38,6 +42,7 @@ def test_theorem1_triangles_vs_full_enumeration(n, k):
 
 def comb_helper(n, r):
     from math import comb
+
     return comb(n, r)
 
 
@@ -59,6 +64,7 @@ def test_theorem1_star_vs_full_enumeration(n, k):
 # (b) triple-level exact enumeration for larger n (subset-level, not marginal)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("n,k", [(6, 2), (7, 2), (8, 3), (10, 3), (12, 4)])
 def test_theorem2_triple_level(n, k):
     """The 4-state marginal computation (used inside expected_triangles_enum_triple)
@@ -74,6 +80,7 @@ def test_theorem2_triple_level(n, k):
 # ---------------------------------------------------------------------------
 # (c) closed forms vs Theorem 1 general formula
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("n,k", [(5, 1), (6, 2), (9, 3), (15, 4), (30, 10)])
 def test_C4_closed_vs_theorem1(n, k):
@@ -93,6 +100,7 @@ def test_star_closed_vs_theorem1(n, k, m):
 # ---------------------------------------------------------------------------
 # (d) Monte Carlo consistency
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("n,k", [(50, 2), (50, 3), (200, 3)])
 def test_monte_carlo_triangles(n, k):
@@ -115,7 +123,7 @@ def test_expected_edges_formula():
 
 def test_asymptotic_constants():
     for k in range(1, 8):
-        assert K.asymptotic_triangle_constant(k) == (4 * k ** 3 - 3 * k ** 2) / 3
+        assert K.asymptotic_triangle_constant(k) == (4 * k**3 - 3 * k**2) / 3
         assert K.er_comparison_limit(k) == 1 - 3 / (4 * k)
 
 
@@ -124,7 +132,6 @@ def test_naive_independence_is_wrong():
     documented falsification of the naive computation."""
     n, k = 8, 2
     p = k / (n - 1)
-    naive = 1 - 3 * (1 - p) ** 4 + 3 * (1 - p) ** 6 - (1 - p) ** 6  # not used
     exact = K.p_triangle_closed(n, k)
     # exact formula must differ from the naive product (1-(1-p)^2)^3
     naive_indep = (2 * p - p * p) ** 3
@@ -134,6 +141,7 @@ def test_naive_independence_is_wrong():
 # ---------------------------------------------------------------------------
 # (e) exact second moment of the triangle count
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("n,k", [(4, 1), (5, 1), (5, 2), (6, 1)])
 def test_second_moment_vs_full_enumeration(n, k):
@@ -155,64 +163,83 @@ def test_second_moment_vs_monte_carlo(n, k):
     samples = K.simulate_triangles_fast(n, k, reps, seed=777)
     se_m = samples.std(ddof=1) / np.sqrt(reps)
     var_s = samples.var(ddof=1)
-    se_v = var_s * np.sqrt(2.0 / (reps - 1))     # normal approx for Var SE
+    se_v = var_s * np.sqrt(2.0 / (reps - 1))  # normal approx for Var SE
     assert abs(samples.mean() - e1) < 5.0 * se_m + 1e-12, (n, k)
     assert abs(var_s - v) < 5.0 * se_v + 1e-12, (n, k, var_s, v, se_v)
-import pytest
-from fractions import Fraction
-import numpy as np
+
 
 def test_subset_bitmasks():
     masks = K._subset_bitmasks(3, 2)
     assert len(masks) == 3
 
+
 def test_count_subgraphs_adj():
     adj = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=bool)
     assert K.count_subgraphs_adj(adj, ((0, 1), (1, 2), (0, 2))) == 6
-    assert K.count_subgraphs_adj(np.array([[0, 1], [1, 0]], dtype=bool), ((0, 1), (1, 2), (0, 2))) == 0
+    assert (
+        K.count_subgraphs_adj(
+            np.array([[0, 1], [1, 0]], dtype=bool), ((0, 1), (1, 2), (0, 2))
+        )
+        == 0
+    )
+
 
 def test_falling():
     assert K.falling(3, 4) == 0
     assert K.falling(3, 3) == 6
+
 
 def test_p_H_in_kout_exceptions():
     with pytest.raises(ValueError):
         K.p_H_in_kout(3, 4, ((0, 1),), 2)
     assert K.p_H_in_kout(3, 1, ((0, 1),), 4) == 0.0
 
+
 def test_count_subgraphs_enum_expectation_exceptions():
     with pytest.raises(ValueError):
         K.count_subgraphs_enum_expectation(3, 4, ((0, 1),), 2, 1)
     assert K.count_subgraphs_enum_expectation(3, 1, ((0, 1),), 4, 1) == 0.0
+
 
 def test_p_H_exact_exceptions():
     with pytest.raises(ValueError):
         K.p_H_exact(3, 4, ((0, 1),), 2)
     assert K.p_H_exact(3, 1, ((0, 1),), 4) == Fraction(0)
 
+
 def test_simulate_kout():
     res = K.simulate_kout(4, 1, 5)
     assert len(res) == 5
+
 
 def test_frac_funcs():
     assert K.p_triangle_exact(5, 2) == Fraction(10, 27)
     assert K.p_C4_exact(5, 2) == Fraction(343, 1296)
     assert K.p_star_exact(5, 2, 2) == Fraction(13, 24)
     assert K.expected_edges_exact(5, 2) == Fraction(15, 2)
-    assert K.triangle_moments_exact_frac(5, 2) == (Fraction(395, 24), Fraction(100, 27), Fraction(15985, 5832))
+    assert K.triangle_moments_exact_frac(5, 2) == (
+        Fraction(395, 24),
+        Fraction(100, 27),
+        Fraction(15985, 5832),
+    )
+
 
 def test_p_triangle_enum_triple():
     assert abs(K.p_triangle_enum_triple(5, 2) - K.p_triangle_closed(5, 2)) < 1e-9
 
+
 def test_expected_triangles_enum_full():
     assert K.expected_triangles_enum_full(5, 2) > 0
+
 
 def test_count_subgraphs_enum_expectation():
     assert K.count_subgraphs_enum_expectation(4, 1, ((0, 1),), 2, 1) > 0
 
+
 def test_expected_unlabeled_copies():
     assert K.expected_unlabeled_copies(4, 1, ((0, 1),), 2, 1) > 0
     assert K.expected_labeled_copies(4, 1, ((0, 1),), 2) > 0
+
 
 def test_expected_edges_exact():
     assert K.expected_edges_exact(5, 2) == Fraction(15, 2)
