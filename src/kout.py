@@ -390,9 +390,9 @@ def p_triangle_enum_triple(n: int, k: int) -> float:
     # 0: neither, 1: first, 2: second, 3: both
     pr = np.zeros(4)
     pr[0] = comb(n - 3, k) if n - 3 >= k else 0
-    pr[1] = comb(n - 3, k - 1) if k >= 1 else 0
+    pr[1] = comb(n - 3, k - 1) if k >= 1 and n - 3 >= 0 else 0
     pr[2] = pr[1]
-    pr[3] = comb(n - 3, k - 2) if k >= 2 else 0
+    pr[3] = comb(n - 3, k - 2) if k >= 2 and n - 3 >= 0 else 0
     pr = pr / denom
     total = 0.0
     for sa, sb, sc in itertools.product(range(4), repeat=3):
