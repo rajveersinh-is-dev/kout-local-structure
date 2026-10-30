@@ -32,4 +32,4 @@ jobs:
         mypy --ignore-missing-imports src/ tests/
     - name: Test with pytest and coverage
       run: |
-        pytest --cov=src tests/test_kout.py
+        pytest --cov=src tests/
