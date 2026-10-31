@@ -1,10 +1,12 @@
-import sys
 import os
 import runpy
 
+
 def test_verify_symbolic():
     # Execute verify_symbolic.py as a script
-    script_path = os.path.join(os.path.dirname(__file__), "..", "src", "verify_symbolic.py")
+    script_path = os.path.join(
+        os.path.dirname(__file__), "..", "src", "verify_symbolic.py"
+    )
     try:
         runpy.run_path(script_path, run_name="__main__")
     except SystemExit as e:
